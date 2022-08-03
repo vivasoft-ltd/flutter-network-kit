@@ -3,8 +3,10 @@ import 'package:example/json_serializable/base_error.dart';
 import 'package:example/json_serializable/error_coverter.dart';
 import 'package:example/json_serializable/model/post.dart';
 import 'package:flutter/material.dart';
-import 'package:viva_network_call/viva_network_call.dart';
+
 import 'dart:convert' as dart_convert;
+
+import 'package:flutter_network_lib/flutter_network_lib.dart';
 
 Future<void> testGetApi() async {
   JsonSerializer jsonSerializer = JsonSerializer();

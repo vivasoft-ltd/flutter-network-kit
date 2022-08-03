@@ -1,5 +1,5 @@
 
-import 'package:viva_network_call/viva_network_call.dart';
+import 'package:flutter_network_lib/flutter_network_lib.dart';
 
 class Post extends Serializable {
   late int userId;

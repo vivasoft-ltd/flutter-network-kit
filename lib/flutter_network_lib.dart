@@ -1,4 +1,4 @@
-library viva_network_call;
+library flutter_network_lib;
 
 export 'src/dio_network_call_executor.dart';
 export 'src/dio_network_call_executor.dart';

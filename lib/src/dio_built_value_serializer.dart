@@ -1,7 +1,8 @@
 import 'package:built_value/serializer.dart';
 import 'package:dio/dio.dart';
-import 'package:viva_network_call/src/dio_serializer.dart';
+
 import 'package:built_collection/built_collection.dart';
+import 'package:flutter_network_lib/src/dio_serializer.dart';
 
 class DioBuiltValueSerializer implements DioSerializer{
   final Serializers serializers;

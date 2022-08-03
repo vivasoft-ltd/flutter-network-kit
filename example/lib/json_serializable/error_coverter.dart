@@ -3,7 +3,7 @@ import 'dart:convert' as dart_convert;
 import 'package:dio/dio.dart';
 import 'package:example/json_serializable/base_error.dart';
 import 'package:example/json_serializable/error_code.dart';
-import 'package:viva_network_call/viva_network_call.dart';
+import 'package:flutter_network_lib/flutter_network_lib.dart';
 
 class DioErrorToApiErrorConverter implements NetworkErrorConverter<BaseError> {
   @override

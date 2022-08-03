@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:viva_network_call/src/dio_serializer.dart';
-import 'package:viva_network_call/src/network_error_converter.dart';
+import 'package:flutter_network_lib/flutter_network_lib.dart';
+import 'package:flutter_network_lib/src/dio_serializer.dart';
 
 
 class DioNetworkCallExecutor {

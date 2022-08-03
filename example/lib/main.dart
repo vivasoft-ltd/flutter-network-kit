@@ -77,9 +77,33 @@ class _MyAppState extends State<MyApp> {
     print(value.toString());
   }
 
+  Future<void> testPostApi() async {
+    JsonSerializer jsonSerializer = JsonSerializer();
+    final dioNetworkCallExecutor = DioNetworkCallExecutor(
+        dio: Dio(),
+        dioSerializer: jsonSerializer,
+        errorConverter: DioErrorToApiErrorConverter());
+
+    final value = await dioNetworkCallExecutor.execute<BaseError, Map<String,dynamic>, Map<String,dynamic>>(
+        options: RequestOptions(
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      method: 'Post',
+      data: {
+        'title': 'foo',
+        'body': 'bar',
+        'userId': 1,
+      },
+      path: 'https://jsonplaceholder.typicode.com/posts',
+    ));
+    print(value.toString());
+  }
+
   @override
   void initState() {
     testGetApi();
+    testPostApi();
     super.initState();
   }
 

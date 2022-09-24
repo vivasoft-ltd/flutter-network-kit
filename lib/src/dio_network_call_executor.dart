@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_network_lib/flutter_network_lib.dart';
@@ -52,7 +54,7 @@ class DioNetworkCallExecutor {
   }) async {
     try {
 
-      final Response _result = await dio.post(path, data: body);
+      final Response _result = await dio.post(path, data: jsonEncode(body));
 
       final result = dioSerializer
           .convertResponse<ReturnType, SingleItemType>(_result);

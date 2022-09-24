@@ -46,5 +46,22 @@ class DioNetworkCallExecutor {
     }
   }
 
+  Future<Either<ErrorType, ReturnType>>
+  post<ErrorType,ReturnType, SingleItemType>(String path,{
+    Map<String, dynamic>? body,
+  }) async {
+    try {
+
+      final Response _result = await dio.post(path, data: body);
+
+      final result = dioSerializer
+          .convertResponse<ReturnType, SingleItemType>(_result);
+      return Right(result);
+    }
+    on Exception catch (e){
+      return Left(errorConverter.convert(e));
+    }
+  }
+
 
 }

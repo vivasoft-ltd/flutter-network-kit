@@ -28,4 +28,23 @@ class DioNetworkCallExecutor {
       return Left(errorConverter.convert(e));
     }
   }
+
+  Future<Either<ErrorType, ReturnType>>
+  get<ErrorType,ReturnType, SingleItemType>(String path,{
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+
+      final Response _result = await dio.get(path, queryParameters: queryParameters);
+
+      final result = dioSerializer
+          .convertResponse<ReturnType, SingleItemType>(_result);
+      return Right(result);
+    }
+    on Exception catch (e){
+      return Left(errorConverter.convert(e));
+    }
+  }
+
+
 }

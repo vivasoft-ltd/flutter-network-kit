@@ -54,7 +54,7 @@ class DioNetworkCallExecutor {
   }) async {
     try {
 
-      final Response _result = await dio.post(path, data: jsonEncode(body));
+      final Response _result = await dio.post(path, data: body);
 
       final result = dioSerializer
           .convertResponse<ReturnType, SingleItemType>(_result);

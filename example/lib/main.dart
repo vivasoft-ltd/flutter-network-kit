@@ -52,9 +52,34 @@ Future<void> testPostApi() async {
   print(value.toString());
 }
 
+Future<void> testPostApi2() async {
+  JsonSerializer jsonSerializer = JsonSerializer();
+  final dioNetworkCallExecutor = DioNetworkCallExecutor(
+      dio: Dio(),
+      dioSerializer: jsonSerializer,
+      errorConverter: DioErrorToApiErrorConverter());
+
+  final value = await dioNetworkCallExecutor.post<BaseError, String, String>(
+    'https://viva.pihr.xyz/token',
+    options: Options(
+      headers: {'Content-type': 'application/x-www-form-urlencoded'},
+    ),
+    body: {
+      'username': 'fuad',
+      'password': 'p1hr#aPk_pAs5',
+      'grant_type': 'password',
+      'companyId': '2',
+      'deviceId': '',
+      'deviceToken': ''
+    },
+  );
+  print(value.toString());
+}
+
 Future<void> jsonSerializableWay() async {
-  testGetApi();
-  testPostApi();
+  //testGetApi();
+  //testPostApi();
+  testPostApi2();
 }
 
 void main() async {

@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_network_lib/flutter_network_lib.dart';
@@ -9,10 +7,13 @@ class DioNetworkCallExecutor {
   final NetworkErrorConverter errorConverter;
   final DioSerializer dioSerializer;
   final Dio dio;
-  DioNetworkCallExecutor(
-      {required this.dio,
-      required this.dioSerializer,
-      required this.errorConverter});
+
+  DioNetworkCallExecutor({
+    required this.dio,
+    required this.dioSerializer,
+    required this.errorConverter,
+  });
+
   Future<Either<ErrorType, ReturnType>>
       execute<ErrorType, ReturnType, SingleItemType>(
           {required RequestOptions options}) async {
@@ -21,6 +22,9 @@ class DioNetworkCallExecutor {
               Headers.jsonContentType &&
           options.data != null) {
         options.data = dioSerializer.convertRequest(options);
+      }
+      if (!options.path.startsWith('http') && options.baseUrl.isEmpty) {
+        options.baseUrl = dio.options.baseUrl;
       }
       final Response _result = await dio.fetch(options);
 

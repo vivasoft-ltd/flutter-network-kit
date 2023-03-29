@@ -7,7 +7,7 @@ import 'package:flutter_network_lib/src/dio_serializer.dart';
 class DioNetworkCallExecutor {
   final NetworkErrorConverter errorConverter;
   final DioSerializer dioSerializer;
-  final ConnectivityResult? connectivityResult;
+  ConnectivityResult? connectivityResult;
   final Dio dio;
 
   DioNetworkCallExecutor({
@@ -79,6 +79,12 @@ class DioNetworkCallExecutor {
           Map<String, dynamic>? body,
           Options? options}) async {
     try {
+      if (connectivityResult?.isConnected() != true) {
+        return Left(errorConverter.convert(ConnectionError(
+            type: ConnectionErrorType.noInternet,
+            errorCode: 'no_internet_connection')));
+      }
+
       final Response _result = await dio.post(path,
           queryParameters: queryParameters, data: body, options: options);
 

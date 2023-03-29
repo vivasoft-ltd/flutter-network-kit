@@ -59,10 +59,12 @@ class DioNetworkCallExecutor {
 
   Future<Either<ErrorType, ReturnType>>
       post<ErrorType, ReturnType, SingleItemType>(String path,
-          {Map<String, dynamic>? body, Options? options}) async {
+          {Map<String, dynamic>? queryParameters,
+          Map<String, dynamic>? body,
+          Options? options}) async {
     try {
-      final Response _result =
-          await dio.post(path, data: body, options: options);
+      final Response _result = await dio.post(path,
+          queryParameters: queryParameters, data: body, options: options);
 
       final result =
           dioSerializer.convertResponse<ReturnType, SingleItemType>(_result);

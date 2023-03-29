@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_network_lib/flutter_network_lib.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_network_lib/src/dio_serializer.dart';
 class DioNetworkCallExecutor {
   final NetworkErrorConverter errorConverter;
   final DioSerializer dioSerializer;
+  final ConnectivityResult? connectivityResult = ConnectivityResult.none;
   final Dio dio;
 
   DioNetworkCallExecutor({
@@ -15,8 +17,7 @@ class DioNetworkCallExecutor {
   });
 
   Future<Either<ErrorType, ReturnType>>
-      execute<ErrorType, ReturnType, SingleItemType>(
-          {required RequestOptions options}) async {
+  execute<ErrorType, ReturnType, SingleItemType>({required RequestOptions options}) async {
     try {
       if (options.headers[Headers.contentTypeHeader] ==
               Headers.jsonContentType &&
@@ -26,6 +27,13 @@ class DioNetworkCallExecutor {
       if (!options.path.startsWith('http') && options.baseUrl.isEmpty) {
         options.baseUrl = dio.options.baseUrl;
       }
+
+      if (connectivityResult?.isConnected() != true) {
+        return Left(errorConverter.convert(ConnectionError(
+            type: ConnectionErrorType.noInternet,
+            errorCode: 'no_internet_connection')));
+      }
+
       final Response _result = await dio.fetch(options);
 
       final result =
@@ -37,12 +45,17 @@ class DioNetworkCallExecutor {
   }
 
   Future<Either<ErrorType, ReturnType>>
-      get<ErrorType, ReturnType, SingleItemType>(
-    String path, {
+  get<ErrorType, ReturnType, SingleItemType>(String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
     try {
+      if (connectivityResult?.isConnected() != true) {
+        return Left(errorConverter.convert(ConnectionError(
+            type: ConnectionErrorType.noInternet,
+            errorCode: 'no_internet_connection')));
+      }
+
       final Response _result = await dio.get(
         path,
         queryParameters: queryParameters,
@@ -58,10 +71,10 @@ class DioNetworkCallExecutor {
   }
 
   Future<Either<ErrorType, ReturnType>>
-      post<ErrorType, ReturnType, SingleItemType>(String path,
-          {Map<String, dynamic>? queryParameters,
-          Map<String, dynamic>? body,
-          Options? options}) async {
+  post<ErrorType, ReturnType, SingleItemType>(String path,
+      {Map<String, dynamic>? queryParameters,
+        Map<String, dynamic>? body,
+        Options? options}) async {
     try {
       final Response _result = await dio.post(path,
           queryParameters: queryParameters, data: body, options: options);
@@ -72,5 +85,13 @@ class DioNetworkCallExecutor {
     } on Exception catch (e) {
       return Left(errorConverter.convert(e));
     }
+  }
+}
+
+// extension on ConnectivityResult
+extension ConectivityChecker on ConnectivityResult {
+  bool isConnected() {
+    return (this == ConnectivityResult.mobile ||
+        this == ConnectivityResult.wifi);
   }
 }

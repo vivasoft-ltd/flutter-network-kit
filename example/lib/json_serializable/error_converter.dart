@@ -40,6 +40,11 @@ class DioErrorToApiErrorConverter implements NetworkErrorConverter<BaseError> {
         default:
           return BaseError(ErrorCode.unexpected);
       }
+    } else if (exception is ConnectionError) {
+      switch (exception.type) {
+        case ConnectionErrorType.noInternet:
+          return BaseError(ErrorCode.notInternet);
+      }
     } else {
       return BaseError(ErrorCode.unexpected);
     }

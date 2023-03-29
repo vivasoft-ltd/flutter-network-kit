@@ -7,17 +7,19 @@ import 'package:flutter_network_lib/src/dio_serializer.dart';
 class DioNetworkCallExecutor {
   final NetworkErrorConverter errorConverter;
   final DioSerializer dioSerializer;
-  final ConnectivityResult? connectivityResult = ConnectivityResult.none;
+  final ConnectivityResult? connectivityResult;
   final Dio dio;
 
   DioNetworkCallExecutor({
     required this.dio,
     required this.dioSerializer,
+    this.connectivityResult,
     required this.errorConverter,
   });
 
   Future<Either<ErrorType, ReturnType>>
-  execute<ErrorType, ReturnType, SingleItemType>({required RequestOptions options}) async {
+      execute<ErrorType, ReturnType, SingleItemType>(
+          {required RequestOptions options}) async {
     try {
       if (options.headers[Headers.contentTypeHeader] ==
               Headers.jsonContentType &&
@@ -45,7 +47,8 @@ class DioNetworkCallExecutor {
   }
 
   Future<Either<ErrorType, ReturnType>>
-  get<ErrorType, ReturnType, SingleItemType>(String path, {
+      get<ErrorType, ReturnType, SingleItemType>(
+    String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
@@ -71,10 +74,10 @@ class DioNetworkCallExecutor {
   }
 
   Future<Either<ErrorType, ReturnType>>
-  post<ErrorType, ReturnType, SingleItemType>(String path,
-      {Map<String, dynamic>? queryParameters,
-        Map<String, dynamic>? body,
-        Options? options}) async {
+      post<ErrorType, ReturnType, SingleItemType>(String path,
+          {Map<String, dynamic>? queryParameters,
+          Map<String, dynamic>? body,
+          Options? options}) async {
     try {
       final Response _result = await dio.post(path,
           queryParameters: queryParameters, data: body, options: options);

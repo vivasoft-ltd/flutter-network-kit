@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_network_lib/flutter_network_lib.dart';
@@ -9,10 +7,12 @@ class DioNetworkCallExecutor {
   final NetworkErrorConverter errorConverter;
   final DioSerializer dioSerializer;
   final Dio dio;
+
   DioNetworkCallExecutor(
       {required this.dio,
       required this.dioSerializer,
       required this.errorConverter});
+
   Future<Either<ErrorType, ReturnType>>
       execute<ErrorType, ReturnType, SingleItemType>(
           {required RequestOptions options}) async {
@@ -55,10 +55,12 @@ class DioNetworkCallExecutor {
 
   Future<Either<ErrorType, ReturnType>>
       post<ErrorType, ReturnType, SingleItemType>(String path,
-          {Map<String, dynamic>? body, Options? options}) async {
+          {Map<String, dynamic>? queryParameters,
+          Map<String, dynamic>? body,
+          Options? options}) async {
     try {
-      final Response _result =
-          await dio.post(path, data: body, options: options);
+      final Response _result = await dio.post(path,
+          queryParameters: queryParameters, data: body, options: options);
 
       final result =
           dioSerializer.convertResponse<ReturnType, SingleItemType>(_result);

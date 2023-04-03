@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
@@ -7,15 +9,41 @@ import 'package:flutter_network_lib/src/dio_serializer.dart';
 class DioNetworkCallExecutor {
   final NetworkErrorConverter errorConverter;
   final DioSerializer dioSerializer;
-  ConnectivityResult? connectivityResult;
   final Dio dio;
 
-  DioNetworkCallExecutor({
-    required this.dio,
-    required this.dioSerializer,
-    this.connectivityResult,
-    required this.errorConverter,
-  });
+  StreamSubscription? _connectivitySubscription;
+  ConnectivityResult? connectivityResult;
+  Function(ConnectivityResult)? onNetworkChanged;
+
+  DioNetworkCallExecutor(
+      {required this.dio,
+      required this.dioSerializer,
+      required this.errorConverter});
+
+  void subscribeToConnectivityChange(
+      Function(ConnectivityResult) onNetworkChanged) {
+    if (this.onNetworkChanged == null) this.onNetworkChanged = onNetworkChanged;
+
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen(
+      (ConnectivityResult result) {
+        if (result.isConnected() != connectivityResult?.isConnected()) {
+          connectivityResult = result;
+          //notify client
+          if (this.onNetworkChanged != null) {
+            this.onNetworkChanged!(result);
+          }
+        }
+      },
+    );
+  }
+
+  bool isNetworkConnected() {
+    if (_connectivitySubscription == null) {
+      throw Exception("You need to subscribe to connectivity change first");
+    } else {
+      return connectivityResult?.isConnected() == true;
+    }
+  }
 
   Future<Either<ErrorType, ReturnType>>
       execute<ErrorType, ReturnType, SingleItemType>(
@@ -39,7 +67,7 @@ class DioNetworkCallExecutor {
       final Response _result = await dio.fetch(options);
 
       final result =
-          dioSerializer.convertResponse<ReturnType, SingleItemType>(_result);
+      dioSerializer.convertResponse<ReturnType, SingleItemType>(_result);
       return Right(result);
     } on Exception catch (e) {
       return Left(errorConverter.convert(e));
@@ -47,8 +75,7 @@ class DioNetworkCallExecutor {
   }
 
   Future<Either<ErrorType, ReturnType>>
-      get<ErrorType, ReturnType, SingleItemType>(
-    String path, {
+  get<ErrorType, ReturnType, SingleItemType>(String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
@@ -66,7 +93,7 @@ class DioNetworkCallExecutor {
       );
 
       final result =
-          dioSerializer.convertResponse<ReturnType, SingleItemType>(_result);
+      dioSerializer.convertResponse<ReturnType, SingleItemType>(_result);
       return Right(result);
     } on Exception catch (e) {
       return Left(errorConverter.convert(e));
@@ -74,10 +101,10 @@ class DioNetworkCallExecutor {
   }
 
   Future<Either<ErrorType, ReturnType>>
-      post<ErrorType, ReturnType, SingleItemType>(String path,
-          {Map<String, dynamic>? queryParameters,
-          Map<String, dynamic>? body,
-          Options? options}) async {
+  post<ErrorType, ReturnType, SingleItemType>(String path,
+      {Map<String, dynamic>? queryParameters,
+        Map<String, dynamic>? body,
+        Options? options}) async {
     try {
       if (connectivityResult?.isConnected() != true) {
         return Left(errorConverter.convert(ConnectionError(
@@ -89,7 +116,7 @@ class DioNetworkCallExecutor {
           queryParameters: queryParameters, data: body, options: options);
 
       final result =
-          dioSerializer.convertResponse<ReturnType, SingleItemType>(_result);
+      dioSerializer.convertResponse<ReturnType, SingleItemType>(_result);
       return Right(result);
     } on Exception catch (e) {
       return Left(errorConverter.convert(e));

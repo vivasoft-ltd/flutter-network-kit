@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_network_lib/flutter_network_lib.dart';
@@ -8,10 +11,45 @@ class DioNetworkCallExecutor {
   final DioSerializer dioSerializer;
   final Dio dio;
 
+  StreamSubscription? _connectivitySubscription;
+  ConnectivityResult? connectivityResult;
+  Function(ConnectivityResult)? onNetworkChanged;
+
   DioNetworkCallExecutor(
       {required this.dio,
       required this.dioSerializer,
       required this.errorConverter});
+
+  void subscribeToConnectivityChange(
+      Function(ConnectivityResult) onNetworkChanged) {
+    if (this.onNetworkChanged == null) this.onNetworkChanged = onNetworkChanged;
+
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen(
+      (ConnectivityResult result) {
+        if (result.isConnected() != connectivityResult?.isConnected()) {
+          connectivityResult = result;
+          if (this.onNetworkChanged != null) {
+            this.onNetworkChanged!(result);
+          }
+        }
+      },
+    );
+  }
+
+  Future<void> unsubscribeFromConnectivityChange() async {
+    await _connectivitySubscription?.cancel();
+    onNetworkChanged = null;
+    _connectivitySubscription = null;
+    connectivityResult = null;
+  }
+
+  bool isNetworkConnected() {
+    if (_connectivitySubscription == null) {
+      throw Exception("You must subscribe to connectivity change first");
+    } else {
+      return connectivityResult?.isConnected() == true;
+    }
+  }
 
   Future<Either<ErrorType, ReturnType>>
       execute<ErrorType, ReturnType, SingleItemType>(
@@ -22,6 +60,17 @@ class DioNetworkCallExecutor {
           options.data != null) {
         options.data = dioSerializer.convertRequest(options);
       }
+      if (!options.path.startsWith('http') && options.baseUrl.isEmpty) {
+        options.baseUrl = dio.options.baseUrl;
+      }
+
+      if (_connectivitySubscription != null &&
+          connectivityResult?.isConnected() != true) {
+        return Left(errorConverter.convert(ConnectionError(
+            type: ConnectionErrorType.noInternet,
+            errorCode: 'no_internet_connection')));
+      }
+
       final Response _result = await dio.fetch(options);
 
       final result =
@@ -39,6 +88,12 @@ class DioNetworkCallExecutor {
     Options? options,
   }) async {
     try {
+      if (connectivityResult?.isConnected() != true) {
+        return Left(errorConverter.convert(ConnectionError(
+            type: ConnectionErrorType.noInternet,
+            errorCode: 'no_internet_connection')));
+      }
+
       final Response _result = await dio.get(
         path,
         queryParameters: queryParameters,
@@ -59,6 +114,12 @@ class DioNetworkCallExecutor {
           Map<String, dynamic>? body,
           Options? options}) async {
     try {
+      if (connectivityResult?.isConnected() != true) {
+        return Left(errorConverter.convert(ConnectionError(
+            type: ConnectionErrorType.noInternet,
+            errorCode: 'no_internet_connection')));
+      }
+
       final Response _result = await dio.post(path,
           queryParameters: queryParameters, data: body, options: options);
 
@@ -68,5 +129,13 @@ class DioNetworkCallExecutor {
     } on Exception catch (e) {
       return Left(errorConverter.convert(e));
     }
+  }
+}
+
+// extension on ConnectivityResult
+extension ConectivityChecker on ConnectivityResult {
+  bool isConnected() {
+    return (this == ConnectivityResult.mobile ||
+        this == ConnectivityResult.wifi);
   }
 }

@@ -1,13 +1,13 @@
+import 'package:built_collection/built_collection.dart';
 import 'package:built_value/serializer.dart';
 import 'package:dio/dio.dart';
-
-import 'package:built_collection/built_collection.dart';
 import 'package:flutter_network_lib/src/dio_serializer.dart';
 
-class DioBuiltValueSerializer implements DioSerializer{
+class DioBuiltValueSerializer implements DioSerializer {
   final Serializers serializers;
 
   DioBuiltValueSerializer({required this.serializers});
+
   @override
   dynamic convertRequest(dynamic data) {
     if (data != null) {
@@ -20,10 +20,9 @@ class DioBuiltValueSerializer implements DioSerializer{
   }
 
   @override
-  ReturnType convertResponse<ReturnType, SingleItemType>(
-    Response response,
-  ) {
-    final ReturnType data = _convertToCustomObject<SingleItemType>(response.data);
+  ReturnType convertResponse<ReturnType, SingleItemType>(Response response,) {
+    final ReturnType data =
+        _convertToCustomObject<SingleItemType>(response.data);
     return data;
   }
 
@@ -38,16 +37,13 @@ class DioBuiltValueSerializer implements DioSerializer{
   }
 
   BuiltList<SingleItemType> _deserializeListOf<SingleItemType>(
-    List dynamicList,
-  ) {
+      List dynamicList,) {
     return BuiltList<SingleItemType>(
       dynamicList.map((element) => _deserialize<SingleItemType>(element)),
     );
   }
 
-  SingleItemType _deserialize<SingleItemType>(
-    Map<String, dynamic> value,
-  ) {
+  SingleItemType _deserialize<SingleItemType>(Map<String, dynamic> value,) {
     return serializers.deserializeWith(
       serializers.serializerForType(SingleItemType)!,
       value,

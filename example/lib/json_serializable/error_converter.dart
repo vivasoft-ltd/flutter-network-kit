@@ -1,5 +1,5 @@
-
 import 'dart:convert' as dart_convert;
+
 import 'package:dio/dio.dart';
 import 'package:example/json_serializable/base_error.dart';
 import 'package:example/json_serializable/error_code.dart';
@@ -25,10 +25,10 @@ class DioErrorToApiErrorConverter implements NetworkErrorConverter<BaseError> {
                 ? dart_convert.jsonDecode(exception.response?.data)
                 : exception.response?.data;
             if (responseError is List) {
-              return _desirialize(
+              return _deserialize(
                   responseError.first, exception.response!.statusCode!);
             } else {
-              return _desirialize(
+              return _deserialize(
                   responseError, exception.response!.statusCode!);
             }
           } else {
@@ -40,12 +40,17 @@ class DioErrorToApiErrorConverter implements NetworkErrorConverter<BaseError> {
         default:
           return BaseError(ErrorCode.unexpected);
       }
+    } else if (exception is ConnectionError) {
+      switch (exception.type) {
+        case ConnectionErrorType.noInternet:
+          return BaseError(ErrorCode.notInternet);
+      }
     } else {
       return BaseError(ErrorCode.unexpected);
     }
   }
 
-  BaseError _desirialize(Map<String, dynamic> value, int statusCode) {
+  BaseError _deserialize(Map<String, dynamic> value, int statusCode) {
     final errorCode = statusCode;
     //final errorCode = value["statusCode"] as int;
     String errorMessage = value["Message"] as String;

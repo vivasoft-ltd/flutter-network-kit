@@ -7,5 +7,6 @@ class ErrorCode {
   static int connectionTimeOut = 104;
   static int defaultError = 105;
   static int sendTimeout = 106;
+  static int notInternet = 7;
 }
 

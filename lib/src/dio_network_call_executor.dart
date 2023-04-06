@@ -12,8 +12,8 @@ class DioNetworkCallExecutor {
   final Dio dio;
 
   StreamSubscription? _connectivitySubscription;
-  ConnectivityResult? connectivityResult;
-  Function(ConnectivityResult)? onNetworkChanged;
+  ConnectivityResult? _connectivityResult;
+  Function(ConnectivityResult)? _onNetworkChanged;
 
   DioNetworkCallExecutor(
       {required this.dio,
@@ -22,14 +22,14 @@ class DioNetworkCallExecutor {
 
   void subscribeToConnectivityChange(
       Function(ConnectivityResult) onNetworkChanged) {
-    if (this.onNetworkChanged == null) this.onNetworkChanged = onNetworkChanged;
+    _onNetworkChanged ??= onNetworkChanged;
 
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen(
+    _connectivitySubscription ??= Connectivity().onConnectivityChanged.listen(
       (ConnectivityResult result) {
-        if (result.isConnected() != connectivityResult?.isConnected()) {
-          connectivityResult = result;
-          if (this.onNetworkChanged != null) {
-            this.onNetworkChanged!(result);
+        if (result.isConnected() != _connectivityResult?.isConnected()) {
+          _connectivityResult = result;
+          if (_onNetworkChanged != null) {
+            _onNetworkChanged!(result);
           }
         }
       },
@@ -38,16 +38,16 @@ class DioNetworkCallExecutor {
 
   Future<void> unsubscribeFromConnectivityChange() async {
     await _connectivitySubscription?.cancel();
-    onNetworkChanged = null;
+    _onNetworkChanged = null;
     _connectivitySubscription = null;
-    connectivityResult = null;
+    _connectivityResult = null;
   }
 
   bool isNetworkConnected() {
     if (_connectivitySubscription == null) {
       throw Exception("You must subscribe to connectivity change first");
     } else {
-      return connectivityResult?.isConnected() == true;
+      return _connectivityResult?.isConnected() == true;
     }
   }
 
@@ -65,7 +65,7 @@ class DioNetworkCallExecutor {
       }
 
       if (_connectivitySubscription != null &&
-          connectivityResult?.isConnected() != true) {
+          _connectivityResult?.isConnected() != true) {
         return Left(errorConverter.convert(ConnectionError(
             type: ConnectionErrorType.noInternet,
             errorCode: 'no_internet_connection')));
@@ -88,7 +88,7 @@ class DioNetworkCallExecutor {
     Options? options,
   }) async {
     try {
-      if (connectivityResult?.isConnected() != true) {
+      if (_connectivityResult?.isConnected() != true) {
         return Left(errorConverter.convert(ConnectionError(
             type: ConnectionErrorType.noInternet,
             errorCode: 'no_internet_connection')));
@@ -114,7 +114,7 @@ class DioNetworkCallExecutor {
           Map<String, dynamic>? body,
           Options? options}) async {
     try {
-      if (connectivityResult?.isConnected() != true) {
+      if (_connectivityResult?.isConnected() != true) {
         return Left(errorConverter.convert(ConnectionError(
             type: ConnectionErrorType.noInternet,
             errorCode: 'no_internet_connection')));

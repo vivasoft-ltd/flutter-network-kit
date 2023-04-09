@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:example/json_serializable/base_error.dart';
 import 'package:example/json_serializable/error_converter.dart';
@@ -95,7 +96,6 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   late final DioNetworkCallExecutor _dioNetworkCallExecutor;
-  bool isSubscribed = false;
 
   @override
   void initState() {
@@ -103,12 +103,24 @@ class _MainScreenState extends State<MainScreen> {
     jsonSerializer.addParser<Post>(Post.fromJson);
 
     _dioNetworkCallExecutor = DioNetworkCallExecutor(
-      dio: Dio(BaseOptions(baseUrl: 'https://jsonplaceholder.typicode.com')),
-      dioSerializer: jsonSerializer,
-      errorConverter: DioErrorToApiErrorConverter(),
-    );
+        dio: Dio(BaseOptions(baseUrl: 'https://jsonplaceholder.typicode.com')),
+        dioSerializer: jsonSerializer,
+        errorConverter: DioErrorToApiErrorConverter(),
+        connectivityResult: ConnectivityResult.none);
+
+    _listenToConnectivityChange();
 
     super.initState();
+  }
+
+  void _listenToConnectivityChange() {
+    Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
+      if (result.isConnected() !=
+          _dioNetworkCallExecutor.connectivityResult?.isConnected()) {
+        _dioNetworkCallExecutor.connectivityResult = result;
+        _showSnackBar(result.isConnected());
+      }
+    });
   }
 
   @override
@@ -128,28 +140,6 @@ class _MainScreenState extends State<MainScreen> {
                 await jsonSerializableWay();
               },
               child: const Text('Initiate network call'),
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (isSubscribed) {
-                  await _dioNetworkCallExecutor
-                      .unsubscribeFromConnectivityChange();
-                } else {
-                  _dioNetworkCallExecutor.subscribeToConnectivityChange(
-                    (connectivityResult) =>
-                        _showSnackBar(connectivityResult.isConnected()),
-                  );
-                }
-
-                setState(() {
-                  isSubscribed = !isSubscribed;
-                });
-              },
-              child: Text(
-                  '${isSubscribed ? 'Unsubscribe' : 'Subscribe'} to connectivity listener'),
             ),
           ],
         ),

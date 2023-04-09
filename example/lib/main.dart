@@ -1,4 +1,3 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:example/json_serializable/base_error.dart';
 import 'package:example/json_serializable/error_converter.dart';

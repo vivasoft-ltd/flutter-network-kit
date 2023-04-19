@@ -69,4 +69,55 @@ class DioNetworkCallExecutor {
       return Left(errorConverter.convert(e));
     }
   }
+
+  Future<Either<ErrorType, ReturnType>>
+      put<ErrorType, ReturnType, SingleItemType>(String path,
+          {Map<String, dynamic>? queryParameters,
+          Map<String, dynamic>? body,
+          Options? options}) async {
+    try {
+      final Response _result = await dio.put(path,
+          queryParameters: queryParameters, data: body, options: options);
+
+      final result =
+          dioSerializer.convertResponse<ReturnType, SingleItemType>(_result);
+      return Right(result);
+    } on Exception catch (e) {
+      return Left(errorConverter.convert(e));
+    }
+  }
+
+  Future<Either<ErrorType, ReturnType>>
+      patch<ErrorType, ReturnType, SingleItemType>(String path,
+          {Map<String, dynamic>? queryParameters,
+          Map<String, dynamic>? body,
+          Options? options}) async {
+    try {
+      final Response _result = await dio.patch(path,
+          queryParameters: queryParameters, data: body, options: options);
+
+      final result =
+          dioSerializer.convertResponse<ReturnType, SingleItemType>(_result);
+      return Right(result);
+    } on Exception catch (e) {
+      return Left(errorConverter.convert(e));
+    }
+  }
+
+  Future<Either<ErrorType, ReturnType>>
+      delete<ErrorType, ReturnType, SingleItemType>(String path,
+          {Map<String, dynamic>? queryParameters,
+          Map<String, dynamic>? body,
+          Options? options}) async {
+    try {
+      final Response _result = await dio.delete(path,
+          queryParameters: queryParameters, data: body, options: options);
+
+      final result =
+          dioSerializer.convertResponse<ReturnType, SingleItemType>(_result);
+      return Right(result);
+    } on Exception catch (e) {
+      return Left(errorConverter.convert(e));
+    }
+  }
 }

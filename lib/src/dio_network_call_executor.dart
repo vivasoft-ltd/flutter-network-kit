@@ -97,7 +97,7 @@ class DioNetworkCallExecutor {
   Future<Either<ErrorType, ReturnType>>
       post<ErrorType, ReturnType, SingleItemType>(String path,
           {Map<String, dynamic>? queryParameters,
-          Map<String, dynamic>? body,
+          dynamic body,
           Options? options}) async {
     try {
       if (connectivityResult?.isConnected() != true) {

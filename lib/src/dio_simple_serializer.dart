@@ -49,7 +49,8 @@ class JsonSerializer implements DioSerializer {
         .toList();
   }
 
-  SingleItemType _deserialize<SingleItemType>(Map<String, dynamic> json) {
-    return jsonParserMap[SingleItemType]!(json);
+  SingleItemType _deserialize<SingleItemType>(dynamic singleItem) {
+    if(singleItem is SingleItemType) return singleItem;
+    return jsonParserMap[SingleItemType]!(singleItem);
   }
 }

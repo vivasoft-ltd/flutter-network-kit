@@ -13,7 +13,7 @@ dependencies:
   dio: ^4.0.6
   dartz: ^0.10.1
   built_value: ^8.1.4
-  connectivity_plus: ^4.0.1
+  connectivity_plus: ^5.0.1
 
 dev_dependencies:
   flutter_test:

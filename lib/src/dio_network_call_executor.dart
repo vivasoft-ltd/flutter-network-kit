@@ -40,26 +40,40 @@ class DioNetworkCallExecutor {
   }
 
   Future<Either<ErrorType, ReturnType>>
-      execute<ErrorType, ReturnType, SingleItemType>(
-          {required RequestOptions options}) async {
+      execute<ErrorType, ReturnType, SingleItemType>({
+    required RequestOptions options,
+  }) async {
     try {
-      if (options.headers[Headers.contentTypeHeader] ==
-              Headers.jsonContentType &&
-          options.data != null) {
-        options.data = dioSerializer.convertRequest(options);
-      }
-      if (!options.path.startsWith('http') && options.baseUrl.isEmpty) {
-        options.baseUrl = dio.options.baseUrl;
-      }
+      // **Force Check Network Before Every Request**
+      List<ConnectivityResult> results =
+          await Connectivity().checkConnectivity();
+      connectivityResult = results.isNotEmpty
+          ? results.firstWhere(
+              (result) =>
+                  result == ConnectivityResult.wifi ||
+                  result == ConnectivityResult.mobile,
+              orElse: () => ConnectivityResult.none,
+            )
+          : ConnectivityResult.none;
 
-      if (connectivityResult?.isConnected() != true) {
+      if (connectivityResult == ConnectivityResult.none) {
         return Left(errorConverter.convert(ConnectionError(
             type: ConnectionErrorType.noInternet,
             errorCode: 'no_internet_connection')));
       }
 
-      final Response _result = await dio.fetch(options);
+      // **Convert Request if Needed**
+      if (options.headers[Headers.contentTypeHeader] ==
+              Headers.jsonContentType &&
+          options.data != null) {
+        options.data = dioSerializer.convertRequest(options);
+      }
 
+      if (!options.path.startsWith('http') && options.baseUrl.isEmpty) {
+        options.baseUrl = dio.options.baseUrl;
+      }
+
+      final Response _result = await dio.fetch(options);
       final result =
           dioSerializer.convertResponse<ReturnType, SingleItemType>(_result);
       return Right(result);
@@ -75,7 +89,18 @@ class DioNetworkCallExecutor {
     Options? options,
   }) async {
     try {
-      if (connectivityResult?.isConnected() != true) {
+      List<ConnectivityResult> results =
+          await Connectivity().checkConnectivity();
+      connectivityResult = results.isNotEmpty
+          ? results.firstWhere(
+              (result) =>
+                  result == ConnectivityResult.wifi ||
+                  result == ConnectivityResult.mobile,
+              orElse: () => ConnectivityResult.none,
+            )
+          : ConnectivityResult.none;
+
+      if (connectivityResult == ConnectivityResult.none) {
         return Left(errorConverter.convert(ConnectionError(
             type: ConnectionErrorType.noInternet,
             errorCode: 'no_internet_connection')));
@@ -101,7 +126,18 @@ class DioNetworkCallExecutor {
           dynamic body,
           Options? options}) async {
     try {
-      if (connectivityResult?.isConnected() != true) {
+      List<ConnectivityResult> results =
+          await Connectivity().checkConnectivity();
+      connectivityResult = results.isNotEmpty
+          ? results.firstWhere(
+              (result) =>
+                  result == ConnectivityResult.wifi ||
+                  result == ConnectivityResult.mobile,
+              orElse: () => ConnectivityResult.none,
+            )
+          : ConnectivityResult.none;
+
+      if (connectivityResult == ConnectivityResult.none) {
         return Left(errorConverter.convert(ConnectionError(
             type: ConnectionErrorType.noInternet,
             errorCode: 'no_internet_connection')));
@@ -124,7 +160,18 @@ class DioNetworkCallExecutor {
           Map<String, dynamic>? body,
           Options? options}) async {
     try {
-      if (connectivityResult?.isConnected() != true) {
+      List<ConnectivityResult> results =
+          await Connectivity().checkConnectivity();
+      connectivityResult = results.isNotEmpty
+          ? results.firstWhere(
+              (result) =>
+                  result == ConnectivityResult.wifi ||
+                  result == ConnectivityResult.mobile,
+              orElse: () => ConnectivityResult.none,
+            )
+          : ConnectivityResult.none;
+
+      if (connectivityResult == ConnectivityResult.none) {
         return Left(errorConverter.convert(ConnectionError(
             type: ConnectionErrorType.noInternet,
             errorCode: 'no_internet_connection')));
@@ -147,7 +194,18 @@ class DioNetworkCallExecutor {
           Map<String, dynamic>? body,
           Options? options}) async {
     try {
-      if (connectivityResult?.isConnected() != true) {
+      List<ConnectivityResult> results =
+          await Connectivity().checkConnectivity();
+      connectivityResult = results.isNotEmpty
+          ? results.firstWhere(
+              (result) =>
+                  result == ConnectivityResult.wifi ||
+                  result == ConnectivityResult.mobile,
+              orElse: () => ConnectivityResult.none,
+            )
+          : ConnectivityResult.none;
+
+      if (connectivityResult == ConnectivityResult.none) {
         return Left(errorConverter.convert(ConnectionError(
             type: ConnectionErrorType.noInternet,
             errorCode: 'no_internet_connection')));
@@ -170,7 +228,18 @@ class DioNetworkCallExecutor {
           Map<String, dynamic>? body,
           Options? options}) async {
     try {
-      if (connectivityResult?.isConnected() != true) {
+      List<ConnectivityResult> results =
+          await Connectivity().checkConnectivity();
+      connectivityResult = results.isNotEmpty
+          ? results.firstWhere(
+              (result) =>
+                  result == ConnectivityResult.wifi ||
+                  result == ConnectivityResult.mobile,
+              orElse: () => ConnectivityResult.none,
+            )
+          : ConnectivityResult.none;
+
+      if (connectivityResult == ConnectivityResult.none) {
         return Left(errorConverter.convert(ConnectionError(
             type: ConnectionErrorType.noInternet,
             errorCode: 'no_internet_connection')));

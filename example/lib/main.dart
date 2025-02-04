@@ -23,14 +23,14 @@ Future<void> testGetApi() async {
     path: '/posts',
   ));
 
-  debugPrint(value.fold(
+  value.fold(
     (l) {
       debugPrint(l.errorCode.toString());
     },
     (r) {
       debugPrint(r.toString());
     },
-  ));
+  );
 }
 
 Future<void> testPostApi() async {

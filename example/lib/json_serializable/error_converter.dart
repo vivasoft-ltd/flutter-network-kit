@@ -8,7 +8,7 @@ import 'package:flutter_network_lib/flutter_network_lib.dart';
 class DioErrorToApiErrorConverter implements NetworkErrorConverter<BaseError> {
   @override
   BaseError convert(Exception exception) {
-    if (exception is DioError) {
+    if (exception is DioException) {
       switch (exception.type) {
         case DioExceptionType.cancel:
           return BaseError(ErrorCode.cancel);
@@ -34,7 +34,7 @@ class DioErrorToApiErrorConverter implements NetworkErrorConverter<BaseError> {
           } else {
             return BaseError(ErrorCode.unexpected);
           }
-        case DioErrorType.sendTimeout:
+        case DioExceptionType.sendTimeout:
           return BaseError(ErrorCode.sendTimeout);
 
         default:

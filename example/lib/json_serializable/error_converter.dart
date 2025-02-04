@@ -10,16 +10,16 @@ class DioErrorToApiErrorConverter implements NetworkErrorConverter<BaseError> {
   BaseError convert(Exception exception) {
     if (exception is DioError) {
       switch (exception.type) {
-        case DioErrorType.cancel:
+        case DioExceptionType.cancel:
           return BaseError(ErrorCode.cancel);
-        case DioErrorType.connectTimeout:
+        case DioExceptionType.connectionTimeout:
           return BaseError(ErrorCode.connectionTimeOut);
-        case DioErrorType.other:
+        case DioExceptionType.unknown:
           return BaseError(
               ErrorCode.connectionTimeOut, "no internet connection");
-        case DioErrorType.receiveTimeout:
+        case DioExceptionType.receiveTimeout:
           return BaseError(ErrorCode.defaultError);
-        case DioErrorType.response:
+        case DioExceptionType.badResponse:
           if (exception.response != null) {
             final responseError = exception.response?.data is String
                 ? dart_convert.jsonDecode(exception.response?.data)

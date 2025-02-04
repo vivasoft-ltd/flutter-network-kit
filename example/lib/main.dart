@@ -22,7 +22,15 @@ Future<void> testGetApi() async {
     method: 'GET',
     path: '/posts',
   ));
-  debugPrint(value.toString());
+
+  debugPrint(value.fold(
+    (l) {
+      debugPrint(l.errorCode.toString());
+    },
+    (r) {
+      debugPrint(r.toString());
+    },
+  ));
 }
 
 Future<void> testPostApi() async {
@@ -112,12 +120,29 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
   }
 
+  void _checkConnectivityAndCallApi() async {
+    final connectivity = await Connectivity().checkConnectivity();
+    _dioNetworkCallExecutor.connectivityResult = connectivity.first;
+
+    if (_dioNetworkCallExecutor.isNetworkConnected()) {
+      await jsonSerializableWay();
+    } else {
+      _showSnackBar(false);
+    }
+  }
+
   void _listenToConnectivityChange() {
-    Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
-      if (result.isConnected() !=
-          _dioNetworkCallExecutor.connectivityResult?.isConnected()) {
-        _dioNetworkCallExecutor.connectivityResult = result;
-        _showSnackBar(result.isConnected());
+    Connectivity()
+        .onConnectivityChanged
+        .listen((List<ConnectivityResult> results) {
+      if (results.isNotEmpty) {
+        ConnectivityResult result = results.first;
+
+        if (result.isConnected() !=
+            _dioNetworkCallExecutor.connectivityResult?.isConnected()) {
+          _dioNetworkCallExecutor.connectivityResult = result;
+          _showSnackBar(result.isConnected());
+        }
       }
     });
   }
@@ -136,6 +161,7 @@ class _MainScreenState extends State<MainScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
+                _checkConnectivityAndCallApi();
                 await jsonSerializableWay();
               },
               child: const Text('Initiate network call'),

@@ -11,7 +11,7 @@ class DioNetworkCallExecutor {
   final DioSerializer dioSerializer;
   final Dio dio;
 
-  StreamSubscription? _connectivitySubscription;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   DioNetworkCallExecutor(
       {required this.dio,
@@ -26,9 +26,10 @@ class DioNetworkCallExecutor {
 
   void _subscribeToConnectivityChange() {
     _connectivitySubscription ??= Connectivity().onConnectivityChanged.listen(
-      (ConnectivityResult result) {
-        if (result.isConnected() != connectivityResult?.isConnected()) {
-          connectivityResult = result;
+      (List<ConnectivityResult> results) {
+        if (results.isNotEmpty &&
+            results.first.isConnected() != connectivityResult?.isConnected()) {
+          connectivityResult = results.first;
         }
       },
     );
@@ -187,7 +188,6 @@ class DioNetworkCallExecutor {
   }
 }
 
-// extension on ConnectivityResult
 extension ConectivityChecker on ConnectivityResult {
   bool isConnected() {
     return (this == ConnectivityResult.mobile ||

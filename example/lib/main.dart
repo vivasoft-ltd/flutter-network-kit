@@ -120,17 +120,6 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
   }
 
-  void _checkConnectivityAndCallApi() async {
-    final connectivity = await Connectivity().checkConnectivity();
-    _dioNetworkCallExecutor.connectivityResult = connectivity.first;
-
-    if (_dioNetworkCallExecutor.isNetworkConnected()) {
-      await jsonSerializableWay();
-    } else {
-      _showSnackBar(false);
-    }
-  }
-
   void _listenToConnectivityChange() {
     Connectivity()
         .onConnectivityChanged
@@ -161,7 +150,6 @@ class _MainScreenState extends State<MainScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                _checkConnectivityAndCallApi();
                 await jsonSerializableWay();
               },
               child: const Text('Initiate network call'),

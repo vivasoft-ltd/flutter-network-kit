@@ -24,6 +24,10 @@ class DioNetworkCallExecutor {
     }
   }
 
+  /// Subscribes to connectivity changes using the [Connectivity] package.
+  ///
+  /// This method listens for changes in the device's connectivity status and
+  /// updates the [connectivityResult] accordingly.
   void _subscribeToConnectivityChange() {
     _connectivitySubscription ??= Connectivity().onConnectivityChanged.listen(
       (List<ConnectivityResult> results) {
@@ -39,6 +43,20 @@ class DioNetworkCallExecutor {
     return connectivityResult?.isConnected() == true;
   }
 
+  /// Executes a network request using the provided [RequestOptions].
+  ///
+  /// This method handles checking for network connectivity, converting request
+  /// data if needed, and making the actual network request using Dio. It then
+  /// converts the response using the provided [DioSerializer] and returns the
+  /// result wrapped in an [Either] object.
+  ///
+  /// - [ErrorType]: The type of error that can be returned.
+  /// - [ReturnType]: The type of data that is expected in a successful response.
+  /// - [SingleItemType]: The type of the single item in a list, if the response is a list.
+  ///
+  /// - [options]: The [RequestOptions] containing all the necessary information
+  ///   to make the network request, including headers, data, method, etc.
+  /// - Returns: A [Future] that completes with an [Either] containing the result or error.
   Future<Either<ErrorType, ReturnType>>
       execute<ErrorType, ReturnType, SingleItemType>({
     required RequestOptions options,
@@ -82,6 +100,20 @@ class DioNetworkCallExecutor {
     }
   }
 
+  /// Executes a GET network request using the Dio package.
+  ///
+  /// This method checks for network connectivity, makes a GET request to the
+  /// specified path, and then converts the response using the provided
+  /// [DioSerializer]. The result is wrapped in an [Either] object, which
+  /// represents either a successful response or an error.
+  ///
+  /// - [ErrorType]: The type of error that can be returned.
+  /// - [ReturnType]: The type of data that is expected in a successful response.
+  /// - [SingleItemType]: The type of the single item in a list, if the response is a list.
+  /// - [path]: The path to which the GET request should be made.
+  /// - [queryParameters]: Optional query parameters to include in the request.
+  /// - [options]: Optional [Options] for configuring the request (e.g., headers).
+  /// - Returns: A [Future] that completes with an [Either] containing the result or error.
   Future<Either<ErrorType, ReturnType>>
       get<ErrorType, ReturnType, SingleItemType>(
     String path, {
@@ -120,6 +152,20 @@ class DioNetworkCallExecutor {
     }
   }
 
+  /// Executes a POST network request using the Dio package.
+  ///
+  /// This method checks for network connectivity, makes a POST request to the
+  /// specified path, and then converts the response using the provided
+  /// [DioSerializer]. The result is wrapped in an [Either] object, which
+  /// represents either a successful response or an error.
+  ///
+  /// - [ErrorType]: The type of error that can be returned.
+  /// - [ReturnType]: The type of data that is expected in a successful response.
+  /// - [SingleItemType]: The type of the single item in a list, if the response is a list.
+  /// - [path]: The path to which the POST request should be made.
+  /// - [queryParameters]: Optional query parameters to include in the request.
+  /// - [body]: The request body data.
+  /// - [options]: Optional [Options] for configuring the request (e.g., headers).
   Future<Either<ErrorType, ReturnType>>
       post<ErrorType, ReturnType, SingleItemType>(String path,
           {Map<String, dynamic>? queryParameters,
@@ -187,6 +233,22 @@ class DioNetworkCallExecutor {
       return Left(errorConverter.convert(e));
     }
   }
+
+  /// Executes a DELETE network request using the Dio package.
+  ///
+  /// This method checks for network connectivity, makes a DELETE request to the
+  /// specified path, and then converts the response using the provided
+  /// [DioSerializer]. The result is wrapped in an [Either] object, which
+  /// represents either a successful response or an error.
+  ///
+  /// - [ErrorType]: The type of error that can be returned.
+  /// - [ReturnType]: The type of data that is expected in a successful response.
+  /// - [SingleItemType]: The type of the single item in a list, if the response is a list.
+  /// - [path]: The path to which the DELETE request should be made.
+  /// - [queryParameters]: Optional query parameters to include in the request.
+  /// - [body]: The request body data.
+  /// - [options]: Optional [Options] for configuring the request (e.g., headers).
+  /// - Returns: A [Future] that completes with an [Either] containing the result or error.
 
   Future<Either<ErrorType, ReturnType>>
       delete<ErrorType, ReturnType, SingleItemType>(String path,
@@ -257,6 +319,11 @@ class DioNetworkCallExecutor {
   }
 }
 
+/// Extension on [ConnectivityResult] to easily check if the device is connected
+/// to the internet via mobile or wifi.
+///
+/// - [isConnected]: Returns true if the device is connected to mobile or wifi.
+/// otherwise it returns false.
 extension ConectivityChecker on ConnectivityResult {
   bool isConnected() {
     return (this == ConnectivityResult.mobile ||

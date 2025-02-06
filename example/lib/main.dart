@@ -1,169 +1,59 @@
-import 'package:dio/dio.dart';
-import 'package:example/json_serializable/base_error.dart';
-import 'package:example/json_serializable/error_converter.dart';
-import 'package:example/json_serializable/model/post.dart';
+import 'package:example/presentation/view/main_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_network_lib/flutter_network_lib.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-Future<void> testGetApi() async {
-  JsonSerializer jsonSerializer = JsonSerializer();
-  jsonSerializer.addParser<Post>(Post.fromJson);
-  final dioNetworkCallExecutor = DioNetworkCallExecutor(
-      dio: Dio(BaseOptions(baseUrl: 'https://jsonplaceholder.typicode.com')),
-      dioSerializer: jsonSerializer,
-      errorConverter: DioErrorToApiErrorConverter());
+import 'data/datasource/call_example_datasource.dart';
+import 'data/repository/call_example_repository_impl.dart';
+import 'domain/repository/get_call_repository.dart';
+import 'domain/usecase/get_all_posts.dart';
+import 'domain/usecase/post_request.dart';
+import 'presentation/viewmodel/post_bloc.dart';
 
-  final value =
-      await dioNetworkCallExecutor.execute<BaseError, List<Post>, Post>(
-          options: RequestOptions(
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    method: 'GET',
-    path: '/posts',
-  ));
-
-  value.fold(
-    (l) {
-      debugPrint(l.errorCode.toString());
-    },
-    (r) {
-      debugPrint(r.toString());
-    },
-  );
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(MyApp());
 }
 
-Future<void> testPostApi() async {
-  JsonSerializer jsonSerializer = JsonSerializer();
-  final dioNetworkCallExecutor = DioNetworkCallExecutor(
-      dio: Dio(BaseOptions(baseUrl: 'https://jsonplaceholder.typicode.com')),
-      dioSerializer: jsonSerializer,
-      errorConverter: DioErrorToApiErrorConverter());
-
-  final value = await dioNetworkCallExecutor
-      .execute<BaseError, Map<String, dynamic>, Map<String, dynamic>>(
-          options: RequestOptions(
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    method: 'Post',
-    data: {
-      'title': 'foo',
-      'body': 'bar',
-      'userId': 1,
-    },
-    path: '/posts',
-  ));
-  print(value.toString());
-}
-
-Future<void> testPostApi2() async {
-  JsonSerializer jsonSerializer = JsonSerializer();
-  final dioNetworkCallExecutor = DioNetworkCallExecutor(
-      dio: Dio(),
-      dioSerializer: jsonSerializer,
-      errorConverter: DioErrorToApiErrorConverter());
-
-  final value = await dioNetworkCallExecutor.post<BaseError, String, String>(
-    'https://viva.pihr.xyz/token',
-    options: Options(
-      headers: {'Content-type': 'application/x-www-form-urlencoded'},
-    ),
-    body: {
-      'username': 'fuad',
-      'password': 'p1hr#aPk_pAs5',
-      'grant_type': 'password',
-      'companyId': '2',
-      'deviceId': '',
-      'deviceToken': ''
-    },
-  );
-  print(value.toString());
-}
-
-Future<void> jsonSerializableWay() async {
-  testGetApi();
-  //testPostApi();
-  // testPostApi2();
-}
-
-void main() async {
-  runApp(const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: MainScreen(),
-  ));
-}
-
-class MainScreen extends StatefulWidget {
-  const MainScreen({Key? key}) : super(key: key);
-
-  @override
-  State<MainScreen> createState() => _MainScreenState();
-}
-
-class _MainScreenState extends State<MainScreen> {
-  late final DioNetworkCallExecutor _dioNetworkCallExecutor;
-
-  @override
-  void initState() {
-    JsonSerializer jsonSerializer = JsonSerializer();
-    jsonSerializer.addParser<Post>(Post.fromJson);
-
-    _dioNetworkCallExecutor = DioNetworkCallExecutor(
-        dio: Dio(BaseOptions(baseUrl: 'https://jsonplaceholder.typicode.com')),
-        dioSerializer: jsonSerializer,
-        errorConverter: DioErrorToApiErrorConverter(),
-        connectivityResult: ConnectivityResult.none);
-
-    _listenToConnectivityChange();
-
-    super.initState();
-  }
-
-  void _listenToConnectivityChange() {
-    Connectivity()
-        .onConnectivityChanged
-        .listen((List<ConnectivityResult> results) {
-      if (results.isNotEmpty) {
-        ConnectivityResult result = results.first;
-
-        if (result.isConnected() !=
-            _dioNetworkCallExecutor.connectivityResult?.isConnected()) {
-          _dioNetworkCallExecutor.connectivityResult = result;
-          _showSnackBar(result.isConnected());
-        }
-      }
-    });
-  }
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Network library demo'),
-      ),
-      body: Center(
-        child: Column(
-          children: [
-            const SizedBox(
-              height: 20,
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                await jsonSerializableWay();
-              },
-              child: const Text('Initiate network call'),
-            ),
-          ],
+    return MultiRepositoryProvider(
+      /// Define the repositories that will be provided to the widgets below in the widget tree.
+      ///
+      /// [CallExampleRepository] is responsible for data operations.
+      /// [CallExampleRepositoryImpl] is the implementation of [CallExampleRepository].
+      /// [CallExampleDataSource] is the data source for the repository.
+      /// [GetAllPosts] is a use case that uses the repository to fetch all posts.
+      /// [CreatePost] is a use case that uses the repository to create a new post.
+      ///
+      /// These repositories are provided using [RepositoryProvider] from the flutter_bloc package.
+      providers: [
+        RepositoryProvider<CallExampleRepository>(
+          create: (context) =>
+              CallExampleRepositoryImpl(CallExampleDataSource()),
         ),
-      ),
-    );
-  }
-
-  _showSnackBar(bool isConnected) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('You are ${isConnected ? 'online' : 'offline'}'),
+        RepositoryProvider<GetAllPosts>(
+          create: (context) => GetAllPosts(
+            RepositoryProvider.of<CallExampleRepository>(context),
+          ),
+        ),
+        RepositoryProvider<CreatePost>(
+          create: (context) => CreatePost(
+            RepositoryProvider.of<CallExampleRepository>(context),
+          ),
+        ),
+      ],
+      child: BlocProvider(
+        create: (context) => PostBloc(
+          RepositoryProvider.of<GetAllPosts>(context),
+          RepositoryProvider.of<CreatePost>(context),
+        ),
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          home: MainScreen(),
+        ),
       ),
     );
   }

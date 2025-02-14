@@ -11,14 +11,12 @@ class CallExampleRepositoryImpl extends CallExampleRepository {
   CallExampleRepositoryImpl(this._callExampleDataSource);
 
   @override
-  Future<Either<BaseError, List<PostModel>>> getAllPosts() async {
-    final result = await _callExampleDataSource.getAllPosts();
-    return result.fold((err) => Left(err), (data) => Right(data));
+  Future<Either<BaseError, List<PostModel>>> getAllPosts() {
+    return _callExampleDataSource.getAllPosts();
   }
 
   @override
-  Future<Either<BaseError, PostModel>> createPost(PostModel post) async {
-    final result = await _callExampleDataSource.createPost(post);
-    return result.fold((err) => Left(err), (data) => Right(data));
+  Future<Either<BaseError, PostModel>> createPost(PostModel post) {
+    return _callExampleDataSource.createPost(post);
   }
 }

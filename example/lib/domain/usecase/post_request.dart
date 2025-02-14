@@ -9,8 +9,7 @@ class CreatePost {
 
   CreatePost(this._callExampleRepository);
 
-  Future<Either<BaseError, PostModel>> call(PostModel post) async {
-    final result = await _callExampleRepository.createPost(post);
-    return result.fold((err) => Left(err), (data) => Right(data));
+  Future<Either<BaseError, PostModel>> call(PostModel post) {
+    return _callExampleRepository.createPost(post);
   }
 }

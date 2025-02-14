@@ -9,8 +9,7 @@ class GetAllPosts {
 
   GetAllPosts(this._callExampleRepository);
 
-  Future<Either<BaseError, List<PostModel>>> get() async {
-    final result = await _callExampleRepository.getAllPosts();
-    return result.fold((err) => Left(err), (data) => Right(data));
+  Future<Either<BaseError, List<PostModel>>> get() {
+    return _callExampleRepository.getAllPosts();
   }
 }

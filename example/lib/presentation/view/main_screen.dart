@@ -1,5 +1,3 @@
-import 'package:example/core/di.dart';
-import 'package:example/core/utils/network/network_executor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_network_lib/flutter_network_lib.dart';
@@ -15,8 +13,6 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  late final INetworkExecutor _networkExecutor;
-
   /// Listens to changes in the device's connectivity status.
   ///
   /// When the connectivity status changes, it checks if the new status is
@@ -29,7 +25,6 @@ class _MainScreenState extends State<MainScreen> {
         ConnectivityResult result = results.first;
         if (result == ConnectivityResult.wifi ||
             result == ConnectivityResult.mobile) {
-          _networkExecutor.getExecutor(result).connectivityResult = result;
           _showSnackBar(result.isConnected());
         }
       }
@@ -48,7 +43,6 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   void initState() {
-    _networkExecutor = locator<INetworkExecutor>();
     _listenToConnectivityChange();
     super.initState();
   }

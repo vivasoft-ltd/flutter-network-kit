@@ -13,8 +13,8 @@ part 'post_event.dart';
 part 'post_state.dart';
 
 class PostBloc extends Bloc<PostEvent, PostState> {
-  final GetAllPosts _getAllPosts;
-  final CreatePost _createPost;
+  final GetAllPostsUseCase _getAllPosts;
+  final CreatePostUseCase _createPost;
 
   PostBloc(this._getAllPosts, this._createPost) : super(PostInitial()) {
     on<FetchPosts>((event, emit) async {

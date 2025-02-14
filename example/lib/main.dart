@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/di.dart';
-import 'core/utils/network/network_executor.dart';
 import 'data/datasource/call_example_datasource.dart';
 import 'data/repository/call_example_repository_impl.dart';
 import 'domain/repository/get_call_repository.dart';
@@ -34,25 +33,24 @@ class MyApp extends StatelessWidget {
       /// These repositories are provided using [RepositoryProvider] from the flutter_bloc package.
       providers: [
         RepositoryProvider<CallExampleRepository>(
-          create: (context) => CallExampleRepositoryImpl(CallExampleDataSource(
-            locator<INetworkExecutor>(), // Injecting from GetIt
-          )),
+          create: (context) =>
+              CallExampleRepositoryImpl(CallExampleDataSource()),
         ),
-        RepositoryProvider<GetAllPosts>(
-          create: (context) => GetAllPosts(
+        RepositoryProvider<GetAllPostsUseCase>(
+          create: (context) => GetAllPostsUseCase(
             RepositoryProvider.of<CallExampleRepository>(context),
           ),
         ),
-        RepositoryProvider<CreatePost>(
-          create: (context) => CreatePost(
+        RepositoryProvider<CreatePostUseCase>(
+          create: (context) => CreatePostUseCase(
             RepositoryProvider.of<CallExampleRepository>(context),
           ),
         ),
       ],
       child: BlocProvider(
         create: (context) => PostBloc(
-          RepositoryProvider.of<GetAllPosts>(context),
-          RepositoryProvider.of<CreatePost>(context),
+          RepositoryProvider.of<GetAllPostsUseCase>(context),
+          RepositoryProvider.of<CreatePostUseCase>(context),
         ),
         child: MaterialApp(
           debugShowCheckedModeBanner: false,

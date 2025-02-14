@@ -31,6 +31,11 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  /// Displays a SnackBar indicating the current connectivity status.
+  ///
+  /// The SnackBar informs the user whether they are currently online or offline.
+  /// It only shows the SnackBar if the widget is currently mounted in the
+  /// widget tree.
   _showSnackBar(bool isConnected) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -68,29 +73,48 @@ class _MainScreenState extends State<MainScreen> {
           ),
           Expanded(
             child: BlocBuilder<PostBloc, PostState>(
-              builder: (context, state) {
-                if (state is PostLoading) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (state is PostLoaded) {
-                  return ListView.builder(
-                    itemCount: state.posts.length,
-                    itemBuilder: (context, index) {
-                      final post = state.posts[index];
-                      return ListTile(
-                        title: Text(post.title!),
-                        subtitle: Text(post.body!),
-                      );
-                    },
-                  );
-                } else if (state is PostError) {
-                  return Center(child: Text("Error: ${state.message}"));
-                }
-                return Center(child: Text("Press the button to fetch posts"));
-              },
+              builder: _buildBlocBuilder,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  /// Builds the UI based on the current [PostState].
+  ///
+  /// Displays a loading indicator if the state is [PostLoading], a list view of
+  /// posts if the state is [PostLoaded], an error message if the state is
+  /// [PostError], or a prompt to fetch posts if no state is loaded.
+  ///
+  /// Args:
+  ///   context: The build context.
+  ///   state: The current state of the PostBloc.
+  Widget _buildBlocBuilder(BuildContext context, PostState state) {
+    if (state is PostLoading) {
+      return Center(child: CircularProgressIndicator());
+    } else if (state is PostLoaded) {
+      return _buildListView(state);
+    } else if (state is PostError) {
+      return Center(child: Text("Error: ${state.message}"));
+    }
+    return Center(child: Text("Press the button to fetch posts"));
+  }
+
+  ListView _buildListView(PostLoaded state) {
+    return ListView.builder(
+      itemCount: state.posts.length,
+      itemBuilder: (context, index) {
+        final post = state.posts[index];
+        return _buildListTile(post);
+      },
+    );
+  }
+
+  ListTile _buildListTile(PostModel post) {
+    return ListTile(
+      title: Text(post.title!),
+      subtitle: Text(post.body!),
     );
   }
 }

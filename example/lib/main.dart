@@ -2,6 +2,8 @@ import 'package:example/presentation/view/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'core/di.dart';
+import 'core/utils/network/network_executor.dart';
 import 'data/datasource/call_example_datasource.dart';
 import 'data/repository/call_example_repository_impl.dart';
 import 'domain/repository/get_call_repository.dart';
@@ -11,6 +13,7 @@ import 'presentation/viewmodel/post_bloc.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  setupLocator();
   runApp(MyApp());
 }
 
@@ -31,8 +34,9 @@ class MyApp extends StatelessWidget {
       /// These repositories are provided using [RepositoryProvider] from the flutter_bloc package.
       providers: [
         RepositoryProvider<CallExampleRepository>(
-          create: (context) =>
-              CallExampleRepositoryImpl(CallExampleDataSource()),
+          create: (context) => CallExampleRepositoryImpl(CallExampleDataSource(
+            locator<INetworkExecutor>(), // Injecting from GetIt
+          )),
         ),
         RepositoryProvider<GetAllPosts>(
           create: (context) => GetAllPosts(

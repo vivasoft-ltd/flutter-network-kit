@@ -1,3 +1,4 @@
+import 'package:example/core/di.dart';
 import 'package:example/core/utils/network/network_executor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,7 +15,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  final _dioNetworkCallExecutor = NetworkExecutor.setup();
+  late final INetworkExecutor _networkExecutor;
 
   /// Listens to changes in the device's connectivity status.
   ///
@@ -26,10 +27,9 @@ class _MainScreenState extends State<MainScreen> {
         .listen((List<ConnectivityResult> results) {
       if (results.isNotEmpty) {
         ConnectivityResult result = results.first;
-
-        if (result.isConnected() !=
-            _dioNetworkCallExecutor.connectivityResult?.isConnected()) {
-          _dioNetworkCallExecutor.connectivityResult = result;
+        if (result == ConnectivityResult.wifi ||
+            result == ConnectivityResult.mobile) {
+          _networkExecutor.getExecutor(result).connectivityResult = result;
           _showSnackBar(result.isConnected());
         }
       }
@@ -37,11 +37,20 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   _showSnackBar(bool isConnected) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('You are ${isConnected ? 'online' : 'offline'}'),
-      ),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('You are ${isConnected ? 'online' : 'offline'}'),
+        ),
+      );
+    }
+  }
+
+  @override
+  void initState() {
+    _networkExecutor = locator<INetworkExecutor>();
+    _listenToConnectivityChange();
+    super.initState();
   }
 
   @override
@@ -66,9 +75,6 @@ class _MainScreenState extends State<MainScreen> {
           Expanded(
             child: BlocBuilder<PostBloc, PostState>(
               builder: (context, state) {
-                if (state is PostInitial) {
-                  _listenToConnectivityChange();
-                }
                 if (state is PostLoading) {
                   return Center(child: CircularProgressIndicator());
                 } else if (state is PostLoaded) {

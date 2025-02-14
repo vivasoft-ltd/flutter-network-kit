@@ -1,12 +1,12 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:example/core/utils/network/executor.dart';
+import 'package:example/core/utils/network/network_executor.dart';
 
 import '../../core/utils/exception/base_error.dart';
 import '../model/post.dart';
 
 class CallExampleDataSource {
-  final Executor _executor = Executor();
+  final _networkCallExecutor = NetworkExecutor.setup();
 
   /// Fetches all posts from the server.
   ///
@@ -15,10 +15,8 @@ class CallExampleDataSource {
   ///
   /// Returns an [Either] that contains a [List<PostModel>] on success, or a [BaseError] on failure.
   Future<Either<BaseError, List<PostModel>>> getAllPosts() async {
-    final networkCallExecutor = Executor.setupParser();
-
     final response =
-        await networkCallExecutor.get<BaseError, List<PostModel>, PostModel>(
+        await _networkCallExecutor.get<BaseError, List<PostModel>, PostModel>(
       "/posts",
       options: Options(
         headers: {
@@ -41,10 +39,8 @@ class CallExampleDataSource {
   /// Returns an [Either] that contains the created [PostModel] on success,
   /// or a [BaseError] on failure.
   Future<Either<BaseError, PostModel>> createPost(PostModel post) async {
-    final networkCallExecutor = Executor.setupParser();
-
     final response =
-        await networkCallExecutor.post<BaseError, PostModel, PostModel>(
+        await _networkCallExecutor.post<BaseError, PostModel, PostModel>(
       "/posts",
       body: post.toJson(),
       options: Options(

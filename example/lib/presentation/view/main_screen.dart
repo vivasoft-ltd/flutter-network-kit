@@ -1,4 +1,4 @@
-import 'package:example/core/utils/network/executor.dart';
+import 'package:example/core/utils/network/network_executor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_network_lib/flutter_network_lib.dart';
@@ -14,13 +14,13 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  final _dioNetworkCallExecutor = NetworkExecutor.setup();
+
   /// Listens to changes in the device's connectivity status.
   ///
   /// When the connectivity status changes, it checks if the new status is
   /// different from the previously known status and updates accordingly.
   void _listenToConnectivityChange() {
-    final dioNetworkCallExecutor = Executor.setupParser();
-
     Connectivity()
         .onConnectivityChanged
         .listen((List<ConnectivityResult> results) {
@@ -28,8 +28,8 @@ class _MainScreenState extends State<MainScreen> {
         ConnectivityResult result = results.first;
 
         if (result.isConnected() !=
-            dioNetworkCallExecutor.connectivityResult?.isConnected()) {
-          dioNetworkCallExecutor.connectivityResult = result;
+            _dioNetworkCallExecutor.connectivityResult?.isConnected()) {
+          _dioNetworkCallExecutor.connectivityResult = result;
           _showSnackBar(result.isConnected());
         }
       }
@@ -67,7 +67,6 @@ class _MainScreenState extends State<MainScreen> {
             child: BlocBuilder<PostBloc, PostState>(
               builder: (context, state) {
                 if (state is PostInitial) {
-                  Executor.setupParser();
                   _listenToConnectivityChange();
                 }
                 if (state is PostLoading) {

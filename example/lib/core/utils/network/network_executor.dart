@@ -5,10 +5,10 @@ import '../../../common/constants.dart';
 import '../../../data/model/post.dart';
 import '../exception/error_converter.dart';
 
-class NetworkConfigurator {
+class NetworkExecutor {
   final JsonSerializer _jsonSerializer = JsonSerializer();
 
-  NetworkConfigurator() {
+  NetworkExecutor() {
     _configureParsers();
   }
 
@@ -16,7 +16,13 @@ class NetworkConfigurator {
     _jsonSerializer.addParser<PostModel>(PostModel.fromJson);
   }
 
-  DioNetworkCallExecutor createDioNetworkCallExecutor(
+  static DioNetworkCallExecutor setup() {
+    final networkExecutor = NetworkExecutor();
+    return networkExecutor
+        ._createDioNetworkCallExecutor(ConnectivityResult.none);
+  }
+
+  DioNetworkCallExecutor _createDioNetworkCallExecutor(
       ConnectivityResult connectivityResult) {
     return DioNetworkCallExecutor(
       dio: Dio(BaseOptions(baseUrl: Constants.BASE_URL)),

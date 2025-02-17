@@ -32,8 +32,12 @@ class DioErrorToApiErrorConverter implements NetworkErrorConverter<BaseError> {
             return BaseError(
                 ErrorCode.unexpected, "Unexpected error occurred.");
           }
-        default:
-          return BaseError(ErrorCode.unexpected, "An unknown error occurred.");
+
+        case DioExceptionType.badCertificate:
+          return BaseError(ErrorCode.badCertificate, "Bad Certificate");
+        case DioExceptionType.connectionError:
+          return BaseError(
+              ErrorCode.connectionError, "Connection error occurred");
       }
     } else if (exception is ConnectionError) {
       switch (exception.type) {

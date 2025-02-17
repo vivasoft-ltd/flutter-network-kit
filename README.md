@@ -4,14 +4,13 @@ A lightweight and developer-friendly network manager for Flutter, built on [Dio]
 
 ## Features
 
-| Feature                                       | Android | iOS |
-|-----------------------------------------------|---------|-----|
-| ✅ Ensures network availability before request | ✔️       | ✔️   |
-| ✅ Built on Dio for handling HTTP requests    | ✔️       | ✔️   |
-| ✅ Add request, response, and error interceptors | ✔️       | ✔️   |
-| ✅ Prevents API calls when offline            | ✔️       | ✔️   |
-| ✅ Supports authentication headers, timeouts, and error handling | ✔️       | ✔️   |
-| ✅ Simple API design with minimal setup       | ✔️       | ✔️   |
+| Feature                                        | Android | iOS |
+|------------------------------------------------|---------|-----|
+| ✅ Ensures network availability before request  | ✔️       | ✔️   |
+| ✅ Reduces redundant error handling duplication | ✔️       | ✔️   |
+| ✅ Built on Dio for handling HTTP requests      | ✔️       | ✔️   |
+| ✅ Prevents API calls when offline              | ✔️       | ✔️   |
+| ✅ Simple API design with minimal setup         | ✔️       | ✔️   |
 
 ***If you want to display the online/offline status at the initial level, you need to listen for connectivity changes. See the example for more details.***
 

@@ -6,4 +6,6 @@ class ErrorCode {
   static const int defaultError = 400;
   static const int sendTimeout = 504;
   static const int noInternet = 0;
+  static const int connectionError = 7;
+  static const int badCertificate = 509;
 }

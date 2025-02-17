@@ -1,39 +1,87 @@
-<!-- 
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# flutter_network_kit
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages). 
-
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages). 
--->
-
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+A lightweight and developer-friendly network manager for Flutter, built on Dio, with automatic connectivity checks before every API request.
 
 ## Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+| Feature                                       | Android | iOS |
+|-----------------------------------------------|---------|-----|
+| ✅ Ensures network availability before request | ✔️       | ✔️   |
+| ✅ Built on Dio for handling HTTP requests    | ✔️       | ✔️   |
+| ✅ Add request, response, and error interceptors | ✔️       | ✔️   |
+| ✅ Retry failed requests based on network status | ✔️       | ✔️   |
+| ✅ Prevents API calls when offline            | ✔️       | ✔️   |
+| ✅ Supports authentication headers, timeouts, and error handling | ✔️       | ✔️   |
+| ✅ Simple API design with minimal setup       | ✔️       | ✔️   |
 
-## Getting started
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
-
-## Usage
-
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder. 
-
-```dart
-const like = 'sample';
+## Installation
+#### Run in your terminal
+```
+flutter pub add flutter_network_kit
 ```
 
-## Additional information
+#### Or add it manually to your pubspec.yaml:
+```
+dependencies:
+  flutter_network_kit: latest_version
+```
 
-TODO: Tell users more about the package: where to find more information, how to 
-contribute to the package, how to file issues, what response they can expect 
-from the package authors, and more.
+
+## Initialize dioNetworkCallExecutor
+#### First, set up the JSON serializer to parse your models.
+```
+// Add jsonSerializer to add parser
+JsonSerializer jsonSerializer = JsonSerializer();
+
+// Add Parsers
+jsonSerializer.addParser<PostModel>(PostModel.fromJson)
+```
+#### Then, configure Dio with a base URL and headers:
+```
+final Dio _dio = Dio(
+      BaseOptions(
+        baseUrl: Constants.BASE_URL,
+        connectTimeout: const Duration(milliseconds: 3000),
+        receiveTimeout: const Duration(milliseconds: 3000),
+        sendTimeout: const Duration(milliseconds: 3000),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      ),
+    )
+```
+
+#### Now, initialize the DioNetworkCallExecutor:
+```
+final DioNetworkCallExecutor dioNetworkCallExecutor = DioNetworkCallExecutor(
+      dio: dio,
+      dioSerializer: jsonSerializer,
+      errorConverter: DioErrorToApiErrorConverter(),
+      );
+```
+
+## Example GET Usage
+```
+Future<Either<BaseError, List<YOUR_MODEL>>> get() async {
+    final response = await di<DioNetworkCallExecutor>()
+        .get<BaseError, List<YOUR_MODEL>, YOUR_MODEL>(
+      Constants.YOUR_PATH,
+    );
+
+    return response;
+}
+```
+
+## Example POST Usage
+```
+  Future<Either<BaseError, YOUR_MODEL>> createPost(YOUR_MODEL post) async {
+    final response = await di<DioNetworkCallExecutor>()
+        .post<BaseError, YOUR_MODEL, YOUR_MODEL>(
+      Constants.YOUR_PATH,
+      body: post.toJson(),
+    );
+
+    return response;
+  }
+```

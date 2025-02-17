@@ -1,12 +1,9 @@
-
-
 class ErrorCode {
-  static int notFound = 101;
-  static int unexpected = 102;
-  static int cancel = 103;
-  static int connectionTimeOut = 104;
-  static int defaultError = 105;
-  static int sendTimeout = 106;
-  static int notInternet = 7;
+  static const int notFound = 404;
+  static const int unexpected = 500;
+  static const int cancel = 499;
+  static const int connectionTimeOut = 408;
+  static const int defaultError = 400;
+  static const int sendTimeout = 504;
+  static const int noInternet = 0;
 }
-

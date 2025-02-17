@@ -1,6 +1,6 @@
 # flutter_network_kit
 
-A lightweight and developer-friendly network manager for Flutter, built on Dio, with automatic connectivity checks before every API request.
+A lightweight and developer-friendly network manager for Flutter, built on [Dio](https://pub.dev/packages/dio), with automatic connectivity checks before every API request.
 
 ## Features
 
@@ -9,7 +9,6 @@ A lightweight and developer-friendly network manager for Flutter, built on Dio, 
 | ✅ Ensures network availability before request | ✔️       | ✔️   |
 | ✅ Built on Dio for handling HTTP requests    | ✔️       | ✔️   |
 | ✅ Add request, response, and error interceptors | ✔️       | ✔️   |
-| ✅ Retry failed requests based on network status | ✔️       | ✔️   |
 | ✅ Prevents API calls when offline            | ✔️       | ✔️   |
 | ✅ Supports authentication headers, timeouts, and error handling | ✔️       | ✔️   |
 | ✅ Simple API design with minimal setup       | ✔️       | ✔️   |
@@ -37,7 +36,10 @@ JsonSerializer jsonSerializer = JsonSerializer();
 // Add Parsers
 jsonSerializer.addParser<PostModel>(PostModel.fromJson)
 ```
-#### Then, configure Dio with a base URL and headers:
+#### This package requires a Dio instance for network calls. You can configure this instance by adding
+- Base URL
+- Timeouts for requests
+- Custom interceptors for logging, authentication, etc.:
 ```
 final Dio _dio = Dio(
       BaseOptions(
@@ -59,6 +61,22 @@ final DioNetworkCallExecutor dioNetworkCallExecutor = DioNetworkCallExecutor(
       dioSerializer: jsonSerializer,
       errorConverter: DioErrorToApiErrorConverter(),
       );
+```
+
+#### Example for BaseErrorConverter
+```
+class DioErrorToApiErrorConverter implements NetworkErrorConverter<BaseError> {
+  @override
+  BaseError convert(Exception exception) {
+    if (exception is DioException) {
+      switch (exception.type) {
+        case DioExceptionType.cancel:
+          return BaseError(ErrorCode.cancel);
+        case DioExceptionType.connectionTimeout:
+          return BaseError(ErrorCode.connectionTimeOut);
+      }
+      }
+}
 ```
 
 ## Example GET Usage

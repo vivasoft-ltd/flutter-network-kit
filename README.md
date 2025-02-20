@@ -16,12 +16,12 @@ A lightweight and developer-friendly network manager for Flutter, built on [Dio]
 
 ## Installation
 #### Run in your terminal
-```
+```bash
 flutter pub add flutter_network_kit
 ```
 
 #### Or add it manually to your pubspec.yaml:
-```
+```yaml
 dependencies:
   flutter_network_kit: latest_version
 ```
@@ -29,7 +29,7 @@ dependencies:
 
 ## Initialize dioNetworkCallExecutor
 #### First, set up the JSON serializer to parse your models.
-```
+```dart
 // Add jsonSerializer to add parser
 JsonSerializer jsonSerializer = JsonSerializer();
 
@@ -40,7 +40,7 @@ jsonSerializer.addParser<PostModel>(PostModel.fromJson)
 - Base URL
 - Timeouts for requests
 - Custom interceptors for logging, authentication, etc.:
-```
+```dart
 final Dio _dio = Dio(
       BaseOptions(
         baseUrl: Constants.BASE_URL,
@@ -55,7 +55,7 @@ final Dio _dio = Dio(
 ```
 
 #### Now, initialize the DioNetworkCallExecutor:
-```
+```dart
 final DioNetworkCallExecutor dioNetworkCallExecutor = DioNetworkCallExecutor(
       dio: dio,
       dioSerializer: jsonSerializer,
@@ -64,7 +64,7 @@ final DioNetworkCallExecutor dioNetworkCallExecutor = DioNetworkCallExecutor(
 ```
 
 #### Example for BaseErrorConverter
-```
+```dart
 class DioErrorToApiErrorConverter implements NetworkErrorConverter<BaseError> {
   @override
   BaseError convert(Exception exception) {
@@ -80,7 +80,7 @@ class DioErrorToApiErrorConverter implements NetworkErrorConverter<BaseError> {
 ```
 
 ## Example GET Usage
-```
+```dart
 Future<Either<BaseError, List<YOUR_MODEL>>> get() async {
     final response = await di<DioNetworkCallExecutor>()
         .get<BaseError, List<YOUR_MODEL>, YOUR_MODEL>(
@@ -92,7 +92,7 @@ Future<Either<BaseError, List<YOUR_MODEL>>> get() async {
 ```
 
 ## Example POST Usage
-```
+```dart
   Future<Either<BaseError, YOUR_MODEL>> createPost(YOUR_MODEL post) async {
     final response = await di<DioNetworkCallExecutor>()
         .post<BaseError, YOUR_MODEL, YOUR_MODEL>(

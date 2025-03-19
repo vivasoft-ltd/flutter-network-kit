@@ -1,24 +1,27 @@
-name: flutter_network_lib
-description: network call helper
-version: 2.1.3
-homepage:
-
+name: viva_network_kit
+description: A lightweight and developer-friendly network manager for Flutter, built on Dio, with automatic connectivity checks before every API request.
+version: 2.1.7
+homepage: https://vivasoftltd.com/
+repository: https://github.com/vivasoft-ltd/flutter-network-kit.git
 environment:
-  sdk: ">=2.15.1 <3.0.0"
-  flutter: ">=1.17.0"
+  sdk: ">=2.17.0 <4.0.0"
+  flutter: ">=2.8.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  dio: ^4.0.6
+  dio: ^5.8.0+1
   dartz: ^0.10.1
-  built_value: ^8.1.4
-  connectivity_plus: ^5.0.1
+  built_value: ^8.9.3
+  connectivity_plus: ^6.1.3
+  get_it: ^8.0.3
+  built_collection: ^5.1.1
+
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^1.0.0
+  flutter_lints: ^5.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

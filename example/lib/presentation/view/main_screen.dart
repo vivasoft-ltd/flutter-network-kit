@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_network_lib/flutter_network_lib.dart';
+import 'package:viva_network_kit/viva_network_kit.dart';
 
 import '../../data/model/post.dart';
 import '../viewmodel/post_bloc.dart';

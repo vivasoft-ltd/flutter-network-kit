@@ -1,7 +1,7 @@
 import 'dart:convert' as dart_convert;
 
 import 'package:dio/dio.dart';
-import 'package:flutter_network_lib/flutter_network_lib.dart';
+import 'package:viva_network_kit/viva_network_kit.dart';
 
 import 'base_error.dart';
 import 'error_code.dart';

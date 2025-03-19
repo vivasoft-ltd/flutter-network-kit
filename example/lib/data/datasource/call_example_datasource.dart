@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import 'package:flutter_network_lib/flutter_network_lib.dart';
+import 'package:viva_network_kit/viva_network_kit.dart';
 
 import '../../core/di.dart';
 import '../../core/utils/exception/base_error.dart';

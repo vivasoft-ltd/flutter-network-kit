@@ -1,4 +1,4 @@
-library flutter_network_lib;
+library viva_network_kit;
 
 export 'package:connectivity_plus/connectivity_plus.dart';
 

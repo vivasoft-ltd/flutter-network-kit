@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:example/common/constants.dart';
 import 'package:example/core/utils/exception/error_converter.dart';
-import 'package:flutter_network_lib/flutter_network_lib.dart';
 import 'package:get_it/get_it.dart';
+import 'package:viva_network_kit/viva_network_kit.dart';
 
 import '../data/model/post.dart';
 

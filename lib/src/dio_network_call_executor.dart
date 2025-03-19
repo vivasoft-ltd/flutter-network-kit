@@ -2,8 +2,9 @@ import 'dart:async';
 
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter_network_lib/flutter_network_lib.dart';
-import 'package:flutter_network_lib/src/dio_serializer.dart';
+import 'package:viva_network_kit/src/dio_serializer.dart';
+
+import '../viva_network_kit.dart';
 
 class DioNetworkCallExecutor {
   ConnectivityResult? connectivityResult;

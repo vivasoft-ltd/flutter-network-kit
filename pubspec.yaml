@@ -1,7 +1,8 @@
-name: flutter_network_lib
-description: network call helper
+name: viva_network_kit
+description: A lightweight and developer-friendly network manager for Flutter, built on Dio, with automatic connectivity checks before every API request.
 version: 2.1.6
-homepage:
+homepage: https://vivasoftltd.com/
+repository: https://github.com/vivasoft-ltd/flutter-network-kit.git
 environment:
   sdk: ">=2.17.0 <4.0.0"
   flutter: ">=2.8.0"

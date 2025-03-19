@@ -1,4 +1,4 @@
-# flutter_network_kit
+# viva_network_kit
 
 A lightweight and developer-friendly network manager for Flutter, built on [Dio](https://pub.dev/packages/dio), with automatic connectivity checks before every API request.
 
@@ -17,13 +17,13 @@ A lightweight and developer-friendly network manager for Flutter, built on [Dio]
 ## Installation
 #### Run in your terminal
 ```bash
-flutter pub add flutter_network_kit
+flutter pub add viva_network_kit
 ```
 
 #### Or add it manually to your pubspec.yaml:
 ```yaml
 dependencies:
-  flutter_network_kit: latest_version
+  viva_network_kit: latest_version
 ```
 
 

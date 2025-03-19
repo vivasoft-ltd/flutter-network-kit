@@ -1,5 +1,3 @@
-## 2.1.6
+## 2.1.7
 
-- Updated to latest dio and connectivity_plus package
-- added a proper example
 - updated readme.md

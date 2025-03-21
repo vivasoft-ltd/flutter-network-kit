@@ -3,7 +3,6 @@ description: A lightweight and developer-friendly network manager for Flutter, b
 version: 2.1.8
 homepage: https://vivasoftltd.com/
 repository: https://github.com/vivasoft-ltd/flutter-network-kit
-publish_to: https://pub.dev
 issue_tracker: https://github.com/vivasoft-ltd/flutter-network-kit/issues
 
 environment:
@@ -30,9 +29,8 @@ dev_dependencies:
 flutter:
 
 topics:
-  - network_client
   - dio
   - http
-  - connectivity_plus
+  - connectivity
 
 

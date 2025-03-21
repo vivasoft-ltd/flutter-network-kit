@@ -50,7 +50,7 @@ class JsonSerializer implements DioSerializer {
   }
 
   SingleItemType _deserialize<SingleItemType>(dynamic singleItem) {
-    if(singleItem is SingleItemType) return singleItem;
+    if (singleItem is SingleItemType) return singleItem;
     return jsonParserMap[SingleItemType]!(singleItem);
   }
 }

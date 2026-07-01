@@ -20,6 +20,9 @@ class DioErrorToApiErrorConverter implements NetworkErrorConverter<BaseError> {
           return BaseError(ErrorCode.sendTimeout, "Receive timeout occurred.");
         case DioExceptionType.sendTimeout:
           return BaseError(ErrorCode.sendTimeout, "Send timeout occurred.");
+        case DioExceptionType.transformTimeout:
+          return BaseError(
+              ErrorCode.sendTimeout, "Transform timeout occurred.");
         case DioExceptionType.unknown:
           return BaseError(ErrorCode.noInternet, "No internet connection.");
         case DioExceptionType.badResponse:

@@ -1,5 +1,3 @@
-library viva_network_kit;
-
 export 'package:connectivity_plus/connectivity_plus.dart';
 
 export 'src/connection_error.dart';

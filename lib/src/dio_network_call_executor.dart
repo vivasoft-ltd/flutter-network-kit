@@ -92,9 +92,9 @@ class DioNetworkCallExecutor {
         options.baseUrl = dio.options.baseUrl;
       }
 
-      final Response _result = await dio.fetch(options);
+      final Response response = await dio.fetch(options);
       final result =
-          dioSerializer.convertResponse<ReturnType, SingleItemType>(_result);
+          dioSerializer.convertResponse<ReturnType, SingleItemType>(response);
       return Right(result);
     } on Exception catch (e) {
       return Left(errorConverter.convert(e));
@@ -139,14 +139,14 @@ class DioNetworkCallExecutor {
             errorCode: 'no_internet_connection')));
       }
 
-      final Response _result = await dio.get(
+      final Response response = await dio.get(
         path,
         queryParameters: queryParameters,
         options: options,
       );
 
       final result =
-          dioSerializer.convertResponse<ReturnType, SingleItemType>(_result);
+          dioSerializer.convertResponse<ReturnType, SingleItemType>(response);
       return Right(result);
     } on Exception catch (e) {
       return Left(errorConverter.convert(e));
@@ -190,11 +190,11 @@ class DioNetworkCallExecutor {
             errorCode: 'no_internet_connection')));
       }
 
-      final Response _result = await dio.post(path,
+      final Response response = await dio.post(path,
           queryParameters: queryParameters, data: body, options: options);
 
       final result =
-          dioSerializer.convertResponse<ReturnType, SingleItemType>(_result);
+          dioSerializer.convertResponse<ReturnType, SingleItemType>(response);
       return Right(result);
     } on Exception catch (e) {
       return Left(errorConverter.convert(e));
@@ -224,11 +224,11 @@ class DioNetworkCallExecutor {
             errorCode: 'no_internet_connection')));
       }
 
-      final Response _result = await dio.put(path,
+      final Response response = await dio.put(path,
           queryParameters: queryParameters, data: body, options: options);
 
       final result =
-          dioSerializer.convertResponse<ReturnType, SingleItemType>(_result);
+          dioSerializer.convertResponse<ReturnType, SingleItemType>(response);
       return Right(result);
     } on Exception catch (e) {
       return Left(errorConverter.convert(e));
@@ -274,11 +274,11 @@ class DioNetworkCallExecutor {
             errorCode: 'no_internet_connection')));
       }
 
-      final Response _result = await dio.delete(path,
+      final Response response = await dio.delete(path,
           queryParameters: queryParameters, data: body, options: options);
 
       final result =
-          dioSerializer.convertResponse<ReturnType, SingleItemType>(_result);
+          dioSerializer.convertResponse<ReturnType, SingleItemType>(response);
       return Right(result);
     } on Exception catch (e) {
       return Left(errorConverter.convert(e));
@@ -308,11 +308,11 @@ class DioNetworkCallExecutor {
             errorCode: 'no_internet_connection')));
       }
 
-      final Response _result = await dio.patch(path,
+      final Response response = await dio.patch(path,
           queryParameters: queryParameters, data: body, options: options);
 
       final result =
-          dioSerializer.convertResponse<ReturnType, SingleItemType>(_result);
+          dioSerializer.convertResponse<ReturnType, SingleItemType>(response);
       return Right(result);
     } on Exception catch (e) {
       return Left(errorConverter.convert(e));

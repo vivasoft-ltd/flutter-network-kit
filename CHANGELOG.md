@@ -1,4 +1,4 @@
-## 2.1.9
+## [Unreleased]
 
 - fixed missing return type lint on `JsonSerializer.addParser` flagged by pub.dev static analysis
 - updated dio, built_value, connectivity_plus, get_it, and flutter_lints to latest versions

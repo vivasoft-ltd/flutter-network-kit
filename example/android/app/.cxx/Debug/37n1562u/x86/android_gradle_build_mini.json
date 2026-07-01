@@ -1,0 +1,20 @@
+{
+  "buildFiles": [
+    "/Users/muntasirmahmudsaif/Tools/flutter/packages/flutter_tools/gradle/src/main/groovy/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/muntasirmahmudsaif/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+      "-C",
+      "/Users/muntasirmahmudsaif/Developer/vivasoft/flutter-network-kit/example/android/app/.cxx/Debug/37n1562u/x86",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/muntasirmahmudsaif/Library/Android/sdk/cmake/3.22.1/bin/ninja",
+    "-C",
+    "/Users/muntasirmahmudsaif/Developer/vivasoft/flutter-network-kit/example/android/app/.cxx/Debug/37n1562u/x86",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {}
+}

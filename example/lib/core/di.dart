@@ -21,7 +21,7 @@ void setupLocator() {
   di.registerSingleton(
     Dio(
       BaseOptions(
-        baseUrl: Constants.BASE_URL,
+        baseUrl: Constants.baseUrl,
         connectTimeout: const Duration(milliseconds: 3000),
         receiveTimeout: const Duration(milliseconds: 3000),
         sendTimeout: const Duration(milliseconds: 3000),

@@ -36,7 +36,7 @@ class _MainScreenState extends State<MainScreen> {
   /// The SnackBar informs the user whether they are currently online or offline.
   /// It only shows the SnackBar if the widget is currently mounted in the
   /// widget tree.
-  _showSnackBar(bool isConnected) {
+  void _showSnackBar(bool isConnected) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

@@ -9,9 +9,9 @@ abstract class Serializable {
 typedef JsonParser<T> = T Function(Map<String, dynamic>);
 
 class JsonSerializer implements DioSerializer {
-  Map<Type, JsonParser> jsonParserMap = {};
+  Map<Type, JsonParser<dynamic>> jsonParserMap = {};
 
-  addParser<SingleItemType>(JsonParser<SingleItemType> jsonParser) {
+  void addParser<SingleItemType>(JsonParser<SingleItemType> jsonParser) {
     jsonParserMap[SingleItemType] = jsonParser;
   }
 

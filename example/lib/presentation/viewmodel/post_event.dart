@@ -8,7 +8,7 @@ sealed class PostEvent extends Equatable {
 class FetchPosts extends PostEvent {}
 
 class CreateNewPost extends PostEvent {
-  final PostModel post;
+  final PostEntity post;
 
   CreateNewPost(this.post);
 

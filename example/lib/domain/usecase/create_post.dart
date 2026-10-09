@@ -1,15 +1,15 @@
 import 'package:dartz/dartz.dart';
-import 'package:example/domain/repository/get_call_repository.dart';
 
 import '../../core/utils/exception/base_error.dart';
-import '../../data/model/post.dart';
+import '../entity/post_entity.dart';
+import '../repository/call_example_repository.dart';
 
 class CreatePostUseCase {
   final CallExampleRepository _callExampleRepository;
 
   CreatePostUseCase(this._callExampleRepository);
 
-  Future<Either<BaseError, PostModel>> call(PostModel post) {
+  Future<Either<BaseError, PostEntity>> call(PostEntity post) {
     return _callExampleRepository.createPost(post);
   }
 }

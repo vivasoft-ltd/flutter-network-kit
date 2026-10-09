@@ -1,87 +1,96 @@
 import 'dart:async';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:viva_network_kit/src/dio_serializer.dart';
 
-import '../viva_network_kit.dart';
+import 'connection_error.dart';
+import 'dio_serializer.dart';
+import 'network_error_converter.dart';
+import 'serialization_exception.dart';
 
+/// Executes Dio requests behind a connectivity guard and returns the outcome
+/// as an [Either]: [Left] with the converted error, or [Right] with the
+/// deserialized response.
 class DioNetworkCallExecutor {
+  /// Last known connectivity state. Refreshed before every request and, when
+  /// no initial value is supplied, on every platform connectivity change.
   ConnectivityResult? connectivityResult;
+
+  /// Maps every failure to the caller's error type.
   final NetworkErrorConverter errorConverter;
+
+  /// Encodes request bodies (in [execute]) and decodes every response.
   final DioSerializer dioSerializer;
+
+  /// The configured Dio client that performs the requests.
   final Dio dio;
+  final Connectivity _connectivity;
 
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
-  DioNetworkCallExecutor(
-      {required this.dio,
-      required this.dioSerializer,
-      required this.errorConverter,
-      this.connectivityResult}) {
+  /// Creates an executor.
+  ///
+  /// - [connectivity]: optional [Connectivity] instance, mainly for tests.
+  ///   Defaults to the platform singleton.
+  /// - [connectivityResult]: optional initial state. When omitted, the
+  ///   executor subscribes to connectivity changes; call [dispose] to cancel.
+  DioNetworkCallExecutor({
+    required this.dio,
+    required this.dioSerializer,
+    required this.errorConverter,
+    this.connectivityResult,
+    Connectivity? connectivity,
+  }) : _connectivity = connectivity ?? Connectivity() {
     if (connectivityResult == null) {
       connectivityResult = ConnectivityResult.none;
       _subscribeToConnectivityChange();
     }
   }
 
-  /// Subscribes to connectivity changes using the [Connectivity] package.
-  ///
-  /// This method listens for changes in the device's connectivity status and
-  /// updates the [connectivityResult] accordingly.
+  /// Subscribes to connectivity changes and keeps [connectivityResult] in sync.
   void _subscribeToConnectivityChange() {
-    _connectivitySubscription ??= Connectivity().onConnectivityChanged.listen(
-      (List<ConnectivityResult> results) {
-        if (results.isNotEmpty &&
-            results.first.isConnected() != connectivityResult?.isConnected()) {
-          connectivityResult = results.first;
-        }
-      },
+    _connectivitySubscription ??=
+        _connectivity.onConnectivityChanged.listen(_updateConnectivity);
+  }
+
+  /// Stores the first active connection in [results], or
+  /// [ConnectivityResult.none] when there is none.
+  void _updateConnectivity(List<ConnectivityResult> results) {
+    connectivityResult = results.firstWhere(
+      (result) => result.isConnected(),
+      orElse: () => ConnectivityResult.none,
     );
   }
 
+  /// Whether the last known [connectivityResult] is an active connection.
   bool isNetworkConnected() {
     return connectivityResult?.isConnected() == true;
   }
 
+  /// Cancels the connectivity subscription. Call this when the executor is no
+  /// longer needed (e.g. from a `GetIt` `dispose` callback).
+  Future<void> dispose() async {
+    await _connectivitySubscription?.cancel();
+    _connectivitySubscription = null;
+  }
+
   /// Executes a network request using the provided [RequestOptions].
   ///
-  /// This method handles checking for network connectivity, converting request
-  /// data if needed, and making the actual network request using Dio. It then
-  /// converts the response using the provided [DioSerializer] and returns the
-  /// result wrapped in an [Either] object.
+  /// When the request's content type is JSON and it carries data, the data is
+  /// first converted with [DioSerializer.convertRequest]. A relative [options]
+  /// path without its own base URL falls back to [Dio.options.baseUrl].
   ///
   /// - [ErrorType]: The type of error that can be returned.
   /// - [ReturnType]: The type of data that is expected in a successful response.
   /// - [SingleItemType]: The type of the single item in a list, if the response is a list.
-  ///
-  /// - [options]: The [RequestOptions] containing all the necessary information
-  ///   to make the network request, including headers, data, method, etc.
+  /// - [options]: The [RequestOptions] describing the request.
   /// - Returns: A [Future] that completes with an [Either] containing the result or error.
   Future<Either<ErrorType, ReturnType>>
       execute<ErrorType, ReturnType, SingleItemType>({
     required RequestOptions options,
-  }) async {
-    try {
-      // **Force Check Network Before Every Request**
-      List<ConnectivityResult> results =
-          await Connectivity().checkConnectivity();
-      connectivityResult = results.isNotEmpty
-          ? results.firstWhere(
-              (result) =>
-                  result == ConnectivityResult.wifi ||
-                  result == ConnectivityResult.mobile,
-              orElse: () => ConnectivityResult.none,
-            )
-          : ConnectivityResult.none;
-
-      if (connectivityResult == ConnectivityResult.none) {
-        return Left(errorConverter.convert(ConnectionError(
-            type: ConnectionErrorType.noInternet,
-            errorCode: 'no_internet_connection')));
-      }
-
-      // **Convert Request if Needed**
+  }) {
+    return _guardedRequest<ErrorType, ReturnType, SingleItemType>(() {
       if (options.headers[Headers.contentTypeHeader] ==
               Headers.jsonContentType &&
           options.data != null) {
@@ -92,26 +101,15 @@ class DioNetworkCallExecutor {
         options.baseUrl = dio.options.baseUrl;
       }
 
-      final Response response = await dio.fetch(options);
-      final result =
-          dioSerializer.convertResponse<ReturnType, SingleItemType>(response);
-      return Right(result);
-    } on Exception catch (e) {
-      return Left(errorConverter.convert(e));
-    }
+      return dio.fetch(options);
+    });
   }
 
-  /// Executes a GET network request using the Dio package.
-  ///
-  /// This method checks for network connectivity, makes a GET request to the
-  /// specified path, and then converts the response using the provided
-  /// [DioSerializer]. The result is wrapped in an [Either] object, which
-  /// represents either a successful response or an error.
+  /// Executes a GET request to [path].
   ///
   /// - [ErrorType]: The type of error that can be returned.
   /// - [ReturnType]: The type of data that is expected in a successful response.
   /// - [SingleItemType]: The type of the single item in a list, if the response is a list.
-  /// - [path]: The path to which the GET request should be made.
   /// - [queryParameters]: Optional query parameters to include in the request.
   /// - [options]: Optional [Options] for configuring the request (e.g., headers).
   /// - Returns: A [Future] that completes with an [Either] containing the result or error.
@@ -120,214 +118,126 @@ class DioNetworkCallExecutor {
     String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
-  }) async {
-    try {
-      List<ConnectivityResult> results =
-          await Connectivity().checkConnectivity();
-      connectivityResult = results.isNotEmpty
-          ? results.firstWhere(
-              (result) =>
-                  result == ConnectivityResult.wifi ||
-                  result == ConnectivityResult.mobile,
-              orElse: () => ConnectivityResult.none,
-            )
-          : ConnectivityResult.none;
+  }) {
+    return _guardedRequest<ErrorType, ReturnType, SingleItemType>(
+      () => dio.get(path, queryParameters: queryParameters, options: options),
+    );
+  }
 
-      if (connectivityResult == ConnectivityResult.none) {
+  /// Executes a POST request to [path] with an optional [body].
+  ///
+  /// See [get] for the meaning of the type parameters and shared arguments.
+  Future<Either<ErrorType, ReturnType>>
+      post<ErrorType, ReturnType, SingleItemType>(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    dynamic body,
+    Options? options,
+  }) {
+    return _guardedRequest<ErrorType, ReturnType, SingleItemType>(
+      () => dio.post(path,
+          queryParameters: queryParameters, data: body, options: options),
+    );
+  }
+
+  /// Executes a PUT request to [path] with an optional [body].
+  ///
+  /// See [get] for the meaning of the type parameters and shared arguments.
+  Future<Either<ErrorType, ReturnType>>
+      put<ErrorType, ReturnType, SingleItemType>(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    dynamic body,
+    Options? options,
+  }) {
+    return _guardedRequest<ErrorType, ReturnType, SingleItemType>(
+      () => dio.put(path,
+          queryParameters: queryParameters, data: body, options: options),
+    );
+  }
+
+  /// Executes a PATCH request to [path] with an optional [body].
+  ///
+  /// See [get] for the meaning of the type parameters and shared arguments.
+  Future<Either<ErrorType, ReturnType>>
+      patch<ErrorType, ReturnType, SingleItemType>(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    dynamic body,
+    Options? options,
+  }) {
+    return _guardedRequest<ErrorType, ReturnType, SingleItemType>(
+      () => dio.patch(path,
+          queryParameters: queryParameters, data: body, options: options),
+    );
+  }
+
+  /// Executes a DELETE request to [path] with an optional [body].
+  ///
+  /// See [get] for the meaning of the type parameters and shared arguments.
+  Future<Either<ErrorType, ReturnType>>
+      delete<ErrorType, ReturnType, SingleItemType>(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    dynamic body,
+    Options? options,
+  }) {
+    return _guardedRequest<ErrorType, ReturnType, SingleItemType>(
+      () => dio.delete(path,
+          queryParameters: queryParameters, data: body, options: options),
+    );
+  }
+
+  /// Shared pipeline for every HTTP method: fresh connectivity check, the
+  /// [request] itself, response deserialization, and error conversion.
+  Future<Either<ErrorType, ReturnType>>
+      _guardedRequest<ErrorType, ReturnType, SingleItemType>(
+    Future<Response<dynamic>> Function() request,
+  ) async {
+    try {
+      // Force a fresh check: the cached value can be stale on resume.
+      _updateConnectivity(await _connectivity.checkConnectivity());
+
+      if (!isNetworkConnected()) {
         return Left(errorConverter.convert(ConnectionError(
-            type: ConnectionErrorType.noInternet,
-            errorCode: 'no_internet_connection')));
+          type: ConnectionErrorType.noInternet,
+          errorCode: 'no_internet_connection',
+        )));
       }
 
-      final Response response = await dio.get(
-        path,
-        queryParameters: queryParameters,
-        options: options,
+      final response = await request();
+      return Right(_convertResponse<ReturnType, SingleItemType>(response));
+    } on Exception catch (e) {
+      return Left(errorConverter.convert(e));
+    }
+  }
+
+  /// Deserializes [response], turning non-[Exception] failures (missing
+  /// parser, payload/model mismatch) into a [SerializationException] so they
+  /// surface as [Left] instead of escaping the [Either].
+  ReturnType _convertResponse<ReturnType, SingleItemType>(
+    Response<dynamic> response,
+  ) {
+    try {
+      return dioSerializer.convertResponse<ReturnType, SingleItemType>(
+        response,
       );
-
-      final result =
-          dioSerializer.convertResponse<ReturnType, SingleItemType>(response);
-      return Right(result);
-    } on Exception catch (e) {
-      return Left(errorConverter.convert(e));
-    }
-  }
-
-  /// Executes a POST network request using the Dio package.
-  ///
-  /// This method checks for network connectivity, makes a POST request to the
-  /// specified path, and then converts the response using the provided
-  /// [DioSerializer]. The result is wrapped in an [Either] object, which
-  /// represents either a successful response or an error.
-  ///
-  /// - [ErrorType]: The type of error that can be returned.
-  /// - [ReturnType]: The type of data that is expected in a successful response.
-  /// - [SingleItemType]: The type of the single item in a list, if the response is a list.
-  /// - [path]: The path to which the POST request should be made.
-  /// - [queryParameters]: Optional query parameters to include in the request.
-  /// - [body]: The request body data.
-  /// - [options]: Optional [Options] for configuring the request (e.g., headers).
-  Future<Either<ErrorType, ReturnType>>
-      post<ErrorType, ReturnType, SingleItemType>(String path,
-          {Map<String, dynamic>? queryParameters,
-          dynamic body,
-          Options? options}) async {
-    try {
-      List<ConnectivityResult> results =
-          await Connectivity().checkConnectivity();
-      connectivityResult = results.isNotEmpty
-          ? results.firstWhere(
-              (result) =>
-                  result == ConnectivityResult.wifi ||
-                  result == ConnectivityResult.mobile,
-              orElse: () => ConnectivityResult.none,
-            )
-          : ConnectivityResult.none;
-
-      if (connectivityResult == ConnectivityResult.none) {
-        return Left(errorConverter.convert(ConnectionError(
-            type: ConnectionErrorType.noInternet,
-            errorCode: 'no_internet_connection')));
-      }
-
-      final Response response = await dio.post(path,
-          queryParameters: queryParameters, data: body, options: options);
-
-      final result =
-          dioSerializer.convertResponse<ReturnType, SingleItemType>(response);
-      return Right(result);
-    } on Exception catch (e) {
-      return Left(errorConverter.convert(e));
-    }
-  }
-
-  Future<Either<ErrorType, ReturnType>>
-      put<ErrorType, ReturnType, SingleItemType>(String path,
-          {Map<String, dynamic>? queryParameters,
-          Map<String, dynamic>? body,
-          Options? options}) async {
-    try {
-      List<ConnectivityResult> results =
-          await Connectivity().checkConnectivity();
-      connectivityResult = results.isNotEmpty
-          ? results.firstWhere(
-              (result) =>
-                  result == ConnectivityResult.wifi ||
-                  result == ConnectivityResult.mobile,
-              orElse: () => ConnectivityResult.none,
-            )
-          : ConnectivityResult.none;
-
-      if (connectivityResult == ConnectivityResult.none) {
-        return Left(errorConverter.convert(ConnectionError(
-            type: ConnectionErrorType.noInternet,
-            errorCode: 'no_internet_connection')));
-      }
-
-      final Response response = await dio.put(path,
-          queryParameters: queryParameters, data: body, options: options);
-
-      final result =
-          dioSerializer.convertResponse<ReturnType, SingleItemType>(response);
-      return Right(result);
-    } on Exception catch (e) {
-      return Left(errorConverter.convert(e));
-    }
-  }
-
-  /// Executes a DELETE network request using the Dio package.
-  ///
-  /// This method checks for network connectivity, makes a DELETE request to the
-  /// specified path, and then converts the response using the provided
-  /// [DioSerializer]. The result is wrapped in an [Either] object, which
-  /// represents either a successful response or an error.
-  ///
-  /// - [ErrorType]: The type of error that can be returned.
-  /// - [ReturnType]: The type of data that is expected in a successful response.
-  /// - [SingleItemType]: The type of the single item in a list, if the response is a list.
-  /// - [path]: The path to which the DELETE request should be made.
-  /// - [queryParameters]: Optional query parameters to include in the request.
-  /// - [body]: The request body data.
-  /// - [options]: Optional [Options] for configuring the request (e.g., headers).
-  /// - Returns: A [Future] that completes with an [Either] containing the result or error.
-
-  Future<Either<ErrorType, ReturnType>>
-      delete<ErrorType, ReturnType, SingleItemType>(String path,
-          {Map<String, dynamic>? queryParameters,
-          Map<String, dynamic>? body,
-          Options? options}) async {
-    try {
-      List<ConnectivityResult> results =
-          await Connectivity().checkConnectivity();
-      connectivityResult = results.isNotEmpty
-          ? results.firstWhere(
-              (result) =>
-                  result == ConnectivityResult.wifi ||
-                  result == ConnectivityResult.mobile,
-              orElse: () => ConnectivityResult.none,
-            )
-          : ConnectivityResult.none;
-
-      if (connectivityResult == ConnectivityResult.none) {
-        return Left(errorConverter.convert(ConnectionError(
-            type: ConnectionErrorType.noInternet,
-            errorCode: 'no_internet_connection')));
-      }
-
-      final Response response = await dio.delete(path,
-          queryParameters: queryParameters, data: body, options: options);
-
-      final result =
-          dioSerializer.convertResponse<ReturnType, SingleItemType>(response);
-      return Right(result);
-    } on Exception catch (e) {
-      return Left(errorConverter.convert(e));
-    }
-  }
-
-  Future<Either<ErrorType, ReturnType>>
-      patch<ErrorType, ReturnType, SingleItemType>(String path,
-          {Map<String, dynamic>? queryParameters,
-          Map<String, dynamic>? body,
-          Options? options}) async {
-    try {
-      List<ConnectivityResult> results =
-          await Connectivity().checkConnectivity();
-      connectivityResult = results.isNotEmpty
-          ? results.firstWhere(
-              (result) =>
-                  result == ConnectivityResult.wifi ||
-                  result == ConnectivityResult.mobile,
-              orElse: () => ConnectivityResult.none,
-            )
-          : ConnectivityResult.none;
-
-      if (connectivityResult == ConnectivityResult.none) {
-        return Left(errorConverter.convert(ConnectionError(
-            type: ConnectionErrorType.noInternet,
-            errorCode: 'no_internet_connection')));
-      }
-
-      final Response response = await dio.patch(path,
-          queryParameters: queryParameters, data: body, options: options);
-
-      final result =
-          dioSerializer.convertResponse<ReturnType, SingleItemType>(response);
-      return Right(result);
-    } on Exception catch (e) {
-      return Left(errorConverter.convert(e));
+    } on Exception {
+      rethrow;
+    } catch (error, stackTrace) {
+      throw SerializationException(
+        'Could not convert response from ${response.requestOptions.uri} '
+        'to $ReturnType.',
+        cause: error,
+        stackTrace: stackTrace,
+      );
     }
   }
 }
 
-/// Extension on [ConnectivityResult] to easily check if the device is connected
-/// to the internet via mobile or wifi.
-///
-/// - [isConnected]: Returns true if the device is connected to mobile or wifi.
-/// otherwise it returns false.
+/// Extension on [ConnectivityResult] to check whether it represents an active
+/// network interface (wifi, mobile, ethernet, vpn, bluetooth or other).
 extension ConectivityChecker on ConnectivityResult {
-  bool isConnected() {
-    return (this == ConnectivityResult.mobile ||
-        this == ConnectivityResult.wifi);
-  }
+  /// Returns true for every result except [ConnectivityResult.none].
+  bool isConnected() => this != ConnectivityResult.none;
 }

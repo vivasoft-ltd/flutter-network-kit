@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(fvm flutter pub get*)",
+      "Bash(fvm flutter pub outdated*)",
+      "Bash(fvm flutter pub publish --dry-run*)",
+      "Bash(fvm flutter analyze*)",
+      "Bash(fvm flutter test*)",
+      "Bash(fvm flutter --version)",
+      "Bash(fvm dart format*)",
+      "Bash(fvm list)"
+    ],
+    "deny": [
+      "Bash(flutter pub publish)",
+      "Bash(fvm flutter pub publish)",
+      "Bash(fvm flutter pub publish --force*)"
+    ]
+  }
+}

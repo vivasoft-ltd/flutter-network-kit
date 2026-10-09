@@ -1,5 +1,8 @@
 import 'package:equatable/equatable.dart';
 
+import '../../domain/entity/post_entity.dart';
+
+/// Wire format of a post as returned by the JSONPlaceholder API.
 class PostModel extends Equatable {
   const PostModel({
     required this.userId,
@@ -13,26 +16,21 @@ class PostModel extends Equatable {
   final String? title;
   final String? body;
 
-  PostModel copyWith({
-    num? userId,
-    int? id,
-    String? title,
-    String? body,
-  }) {
-    return PostModel(
-      userId: userId ?? this.userId,
-      id: id ?? this.id,
-      title: title ?? this.title,
-      body: body ?? this.body,
-    );
-  }
-
   factory PostModel.fromJson(Map<String, dynamic> json) {
     return PostModel(
       userId: json["userId"],
       id: json["id"],
       title: json["title"],
       body: json["body"],
+    );
+  }
+
+  factory PostModel.fromEntity(PostEntity entity) {
+    return PostModel(
+      userId: entity.userId,
+      id: entity.id,
+      title: entity.title,
+      body: entity.body,
     );
   }
 
@@ -43,16 +41,15 @@ class PostModel extends Equatable {
         "body": body,
       };
 
-  @override
-  String toString() {
-    return "$userId, $id, $title, $body, ";
+  PostEntity toEntity() {
+    return PostEntity(
+      userId: userId?.toInt() ?? 0,
+      id: id,
+      title: title ?? '',
+      body: body ?? '',
+    );
   }
 
   @override
-  List<Object?> get props => [
-        userId,
-        id,
-        title,
-        body,
-      ];
+  List<Object?> get props => [userId, id, title, body];
 }

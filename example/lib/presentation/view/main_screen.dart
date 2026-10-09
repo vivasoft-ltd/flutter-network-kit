@@ -1,75 +1,70 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:viva_network_kit/viva_network_kit.dart';
 
-import '../../data/model/post.dart';
+import '../../domain/entity/post_entity.dart';
 import '../viewmodel/post_bloc.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  const MainScreen({super.key, this.connectivity});
+
+  /// Injected for tests; defaults to the platform [Connectivity] singleton.
+  final Connectivity? connectivity;
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
-  /// Listens to changes in the device's connectivity status.
-  ///
-  /// When the connectivity status changes, it checks if the new status is
-  /// different from the previously known status and updates accordingly.
-  void _listenToConnectivityChange() {
-    Connectivity()
-        .onConnectivityChanged
-        .listen((List<ConnectivityResult> results) {
-      if (results.isNotEmpty) {
-        ConnectivityResult result = results.first;
-        if (result == ConnectivityResult.wifi ||
-            result == ConnectivityResult.mobile) {
-          _showSnackBar(result.isConnected());
-        }
-      }
-    });
-  }
-
-  /// Displays a SnackBar indicating the current connectivity status.
-  ///
-  /// The SnackBar informs the user whether they are currently online or offline.
-  /// It only shows the SnackBar if the widget is currently mounted in the
-  /// widget tree.
-  void _showSnackBar(bool isConnected) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('You are ${isConnected ? 'online' : 'offline'}'),
-        ),
-      );
-    }
-  }
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   @override
   void initState() {
-    _listenToConnectivityChange();
     super.initState();
+    _listenToConnectivityChange();
+  }
+
+  @override
+  void dispose() {
+    _connectivitySubscription?.cancel();
+    super.dispose();
+  }
+
+  /// Shows a SnackBar whenever the device goes online or offline.
+  void _listenToConnectivityChange() {
+    _connectivitySubscription = (widget.connectivity ?? Connectivity())
+        .onConnectivityChanged
+        .listen(
+            (results) => _showSnackBar(results.any((r) => r.isConnected())));
+  }
+
+  void _showSnackBar(bool isConnected) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('You are ${isConnected ? 'online' : 'offline'}'),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Posts")),
+      appBar: AppBar(title: const Text("Posts")),
       body: Column(
         children: [
           ElevatedButton(
-            onPressed: () {
-              context.read<PostBloc>().add(FetchPosts());
-            },
-            child: Text("Fetch Posts"),
+            onPressed: () => context.read<PostBloc>().add(FetchPosts()),
+            child: const Text("Fetch Posts"),
           ),
           ElevatedButton(
             onPressed: () {
-              final newPost = PostModel(title: "foo", body: "bar", userId: 1);
+              const newPost = PostEntity(title: "foo", body: "bar", userId: 1);
               context.read<PostBloc>().add(CreateNewPost(newPost));
             },
-            child: Text("Create Post"),
+            child: const Text("Create Post"),
           ),
           Expanded(
             child: BlocBuilder<PostBloc, PostState>(
@@ -81,40 +76,25 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  /// Builds the UI based on the current [PostState].
-  ///
-  /// Displays a loading indicator if the state is [PostLoading], a list view of
-  /// posts if the state is [PostLoaded], an error message if the state is
-  /// [PostError], or a prompt to fetch posts if no state is loaded.
-  ///
-  /// Args:
-  ///   context: The build context.
-  ///   state: The current state of the PostBloc.
+  /// Builds the UI for the current [PostState].
   Widget _buildBlocBuilder(BuildContext context, PostState state) {
-    if (state is PostLoading) {
-      return Center(child: CircularProgressIndicator());
-    } else if (state is PostLoaded) {
-      return _buildListView(state);
-    } else if (state is PostError) {
-      return Center(child: Text("Error: ${state.message}"));
-    }
-    return Center(child: Text("Press the button to fetch posts"));
+    return switch (state) {
+      PostLoading() => const Center(child: CircularProgressIndicator()),
+      PostLoaded(:final posts) => _buildListView(posts),
+      PostCreated(:final post) => _buildListView([post]),
+      PostError(:final message) => Center(child: Text("Error: $message")),
+      PostInitial() =>
+        const Center(child: Text("Press the button to fetch posts")),
+    };
   }
 
-  ListView _buildListView(PostLoaded state) {
+  Widget _buildListView(List<PostEntity> posts) {
     return ListView.builder(
-      itemCount: state.posts.length,
+      itemCount: posts.length,
       itemBuilder: (context, index) {
-        final post = state.posts[index];
-        return _buildListTile(post);
+        final post = posts[index];
+        return ListTile(title: Text(post.title), subtitle: Text(post.body));
       },
-    );
-  }
-
-  ListTile _buildListTile(PostModel post) {
-    return ListTile(
-      title: Text(post.title!),
-      subtitle: Text(post.body!),
     );
   }
 }

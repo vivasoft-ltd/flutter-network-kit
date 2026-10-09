@@ -1,29 +1,58 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+import 'dart:async';
 
+import 'package:dartz/dartz.dart';
+import 'package:example/core/utils/exception/base_error.dart';
+import 'package:example/domain/entity/post_entity.dart';
+import 'package:example/domain/repository/call_example_repository.dart';
+import 'package:example/domain/usecase/create_post.dart';
+import 'package:example/domain/usecase/get_all_posts.dart';
 import 'package:example/presentation/view/main_screen.dart';
+import 'package:example/presentation/viewmodel/post_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:viva_network_kit/viva_network_kit.dart';
+
+class _FakeRepository implements CallExampleRepository {
+  @override
+  Future<Either<BaseError, List<PostEntity>>> getAllPosts() async =>
+      const Right(
+          [PostEntity(userId: 1, id: 1, title: 'Hello', body: 'World')]);
+
+  @override
+  Future<Either<BaseError, PostEntity>> createPost(PostEntity post) async =>
+      Right(post);
+}
+
+class _FakeConnectivity implements Connectivity {
+  @override
+  Future<List<ConnectivityResult>> checkConnectivity() async =>
+      [ConnectivityResult.wifi];
+
+  @override
+  Stream<List<ConnectivityResult>> get onConnectivityChanged =>
+      const Stream.empty();
+}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MainScreen());
+  testWidgets('fetches and lists posts', (tester) async {
+    final repository = _FakeRepository();
+    await tester.pumpWidget(
+      BlocProvider(
+        create: (_) => PostBloc(
+          GetAllPostsUseCase(repository),
+          CreatePostUseCase(repository),
+        ),
+        child: MaterialApp(home: MainScreen(connectivity: _FakeConnectivity())),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Press the button to fetch posts'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    await tester.tap(find.text('Fetch Posts'));
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Hello'), findsOneWidget);
+    expect(find.text('World'), findsOneWidget);
   });
 }

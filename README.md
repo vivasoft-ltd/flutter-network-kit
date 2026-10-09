@@ -2,104 +2,133 @@
 
 A lightweight and developer-friendly network manager for Flutter, built on [Dio](https://pub.dev/packages/dio), with automatic connectivity checks before every API request.
 
+Every call returns an `Either<YourError, YourResult>` (from [dartz](https://pub.dev/packages/dartz)), so success and failure are handled in one place without `try`/`catch`.
+
 ## Features
 
-| Feature                                        | Android | iOS |
-|------------------------------------------------|---------|-----|
-| ✅ Ensures network availability before request  | ✔️       | ✔️   |
-| ✅ Reduces redundant error handling duplication | ✔️       | ✔️   |
-| ✅ Built on Dio for handling HTTP requests      | ✔️       | ✔️   |
-| ✅ Prevents API calls when offline              | ✔️       | ✔️   |
-| ✅ Simple API design with minimal setup         | ✔️       | ✔️   |
-
-***If you want to display the online/offline status at the initial level, you need to listen for connectivity changes. See the example for more details.***
+- ✅ Checks network availability before every request and skips the call when offline
+- ✅ Built on Dio — use your own `BaseOptions`, interceptors, and adapters
+- ✅ Typed results: single objects and lists are deserialized for you
+- ✅ One error type for your app: connection, HTTP, and parsing failures all go through your `NetworkErrorConverter`
+- ✅ Supports Android, iOS, Web, Windows, macOS, and Linux
 
 ## Installation
-#### Run in your terminal
+
 ```bash
 flutter pub add viva_network_kit
 ```
 
-#### Or add it manually to your pubspec.yaml:
+Or add it manually to your `pubspec.yaml`:
+
 ```yaml
 dependencies:
-  viva_network_kit: latest_version
+  viva_network_kit: ^2.2.0
 ```
 
+## Setup
 
-## Initialize dioNetworkCallExecutor
-#### First, set up the JSON serializer to parse your models.
-```dart
-// Add jsonSerializer to add parser
-JsonSerializer jsonSerializer = JsonSerializer();
+### 1. Register your model parsers
 
-// Add Parsers
-jsonSerializer.addParser<PostModel>(PostModel.fromJson)
-```
-#### This package requires a Dio instance for network calls. You can configure this instance by adding
-- Base URL
-- Timeouts for requests
-- Custom interceptors for logging, authentication, etc.:
 ```dart
-final Dio _dio = Dio(
-      BaseOptions(
-        baseUrl: Constants.BASE_URL,
-        connectTimeout: const Duration(milliseconds: 3000),
-        receiveTimeout: const Duration(milliseconds: 3000),
-        sendTimeout: const Duration(milliseconds: 3000),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      ),
-    )
+final jsonSerializer = JsonSerializer()
+  ..addParser<PostModel>(PostModel.fromJson);
 ```
 
-#### Now, initialize the DioNetworkCallExecutor:
+### 2. Configure Dio
+
+Set the base URL, timeouts, and any interceptors (logging, auth, …):
+
 ```dart
-final DioNetworkCallExecutor dioNetworkCallExecutor = DioNetworkCallExecutor(
-      dio: dio,
-      dioSerializer: jsonSerializer,
-      errorConverter: DioErrorToApiErrorConverter(),
-      );
+final dio = Dio(
+  BaseOptions(
+    baseUrl: 'https://jsonplaceholder.typicode.com',
+    connectTimeout: const Duration(seconds: 3),
+    receiveTimeout: const Duration(seconds: 3),
+    sendTimeout: const Duration(seconds: 3),
+    headers: {'Content-Type': 'application/json'},
+  ),
+);
 ```
 
-#### Example for BaseErrorConverter
+### 3. Map errors to your own error type
+
+`convert` receives one of:
+
+- `ConnectionError` — the device was offline, so no request was made
+- `DioException` — the request failed (timeout, bad response, …)
+- `SerializationException` — the response could not be parsed into your model
+
 ```dart
-class DioErrorToApiErrorConverter implements NetworkErrorConverter<BaseError> {
+class AppErrorConverter implements NetworkErrorConverter<AppError> {
   @override
-  BaseError convert(Exception exception) {
-    if (exception is DioException) {
-      switch (exception.type) {
-        case DioExceptionType.cancel:
-          return BaseError(ErrorCode.cancel);
-        case DioExceptionType.connectionTimeout:
-          return BaseError(ErrorCode.connectionTimeOut);
-      }
-      }
-}
-```
-
-## Example GET Usage
-```dart
-Future<Either<BaseError, List<YOUR_MODEL>>> get() async {
-    final response = await di<DioNetworkCallExecutor>()
-        .get<BaseError, List<YOUR_MODEL>, YOUR_MODEL>(
-      Constants.YOUR_PATH,
-    );
-
-    return response;
-}
-```
-
-## Example POST Usage
-```dart
-  Future<Either<BaseError, YOUR_MODEL>> createPost(YOUR_MODEL post) async {
-    final response = await di<DioNetworkCallExecutor>()
-        .post<BaseError, YOUR_MODEL, YOUR_MODEL>(
-      Constants.YOUR_PATH,
-      body: post.toJson(),
-    );
-
-    return response;
+  AppError convert(Exception exception) {
+    return switch (exception) {
+      ConnectionError() => AppError('No internet connection.'),
+      DioException(type: DioExceptionType.connectionTimeout) =>
+        AppError('Connection timed out.'),
+      DioException(:final response?) =>
+        AppError('Server error ${response.statusCode}.'),
+      SerializationException() => AppError('Unexpected response format.'),
+      _ => AppError('Something went wrong.'),
+    };
   }
+}
 ```
+
+### 4. Create the executor
+
+```dart
+final executor = DioNetworkCallExecutor(
+  dio: dio,
+  dioSerializer: jsonSerializer,
+  errorConverter: AppErrorConverter(),
+);
+
+// When it is no longer needed (e.g. app shutdown or DI container reset):
+await executor.dispose();
+```
+
+## Usage
+
+The type parameters are `<ErrorType, ReturnType, SingleItemType>`. For a list
+response, `ReturnType` is `List<Model>` and `SingleItemType` is `Model`.
+
+### GET
+
+```dart
+Future<Either<AppError, List<PostModel>>> getPosts() {
+  return executor.get<AppError, List<PostModel>, PostModel>('/posts');
+}
+```
+
+### POST / PUT / PATCH / DELETE
+
+```dart
+Future<Either<AppError, PostModel>> createPost(PostModel post) {
+  return executor.post<AppError, PostModel, PostModel>(
+    '/posts',
+    body: post.toJson(),
+  );
+}
+```
+
+`put`, `patch`, and `delete` take the same arguments. For full control, pass
+Dio `RequestOptions` to `execute`.
+
+### Handling the result
+
+```dart
+final result = await getPosts();
+result.fold(
+  (error) => showError(error.message),
+  (posts) => showPosts(posts),
+);
+```
+
+## Showing online/offline status
+
+The executor checks connectivity before every request. To show a live
+online/offline indicator in your UI, listen to `Connectivity().onConnectivityChanged`
+(re-exported from [connectivity_plus](https://pub.dev/packages/connectivity_plus)).
+The [example app](https://github.com/vivasoft-ltd/flutter-network-kit/tree/main/example)
+shows this, along with a full clean-architecture setup using BLoC and `get_it`.

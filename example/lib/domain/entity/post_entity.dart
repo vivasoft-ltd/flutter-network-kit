@@ -1,8 +1,19 @@
-class PostEntity {
-  late int userId;
-  int? id;
-  String? title;
-  String? body;
+import 'package:equatable/equatable.dart';
 
-  PostEntity(this.userId, this.id, this.title, this.body);
+/// Domain representation of a post, independent of any transport format.
+class PostEntity extends Equatable {
+  const PostEntity({
+    required this.userId,
+    this.id,
+    required this.title,
+    required this.body,
+  });
+
+  final int userId;
+  final int? id;
+  final String title;
+  final String body;
+
+  @override
+  List<Object?> get props => [userId, id, title, body];
 }

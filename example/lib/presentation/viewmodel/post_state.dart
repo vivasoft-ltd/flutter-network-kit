@@ -10,7 +10,7 @@ class PostInitial extends PostState {}
 class PostLoading extends PostState {}
 
 class PostLoaded extends PostState {
-  final List<PostModel> posts;
+  final List<PostEntity> posts;
 
   PostLoaded(this.posts);
 
@@ -19,7 +19,7 @@ class PostLoaded extends PostState {
 }
 
 class PostCreated extends PostState {
-  final PostModel post;
+  final PostEntity post;
 
   PostCreated(this.post);
 

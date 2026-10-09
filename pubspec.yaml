@@ -7,7 +7,7 @@ issue_tracker: https://github.com/vivasoft-ltd/flutter-network-kit/issues
 
 environment:
   sdk: ">=3.2.0 <4.0.0"
-  flutter: ">=3.7.0"
+  flutter: ">=3.16.0"
 
 dependencies:
   flutter:
@@ -16,7 +16,6 @@ dependencies:
   dartz: ^0.10.1
   built_value: ^8.12.6
   connectivity_plus: ^7.2.0
-  get_it: ^9.2.1
   built_collection: ^5.1.1
 
 

@@ -1,3 +1,6 @@
+# Files excluded from the pub.dev archive.
+# NOTE: when .pubignore exists, pub ignores the root .gitignore, so its rules are repeated here.
+
 # Miscellaneous
 *.class
 *.log
@@ -33,3 +36,6 @@ build/
 
 # Claude Code personal settings (shared settings live in .claude/settings.json)
 .claude/settings.local.json
+
+# Contributor tooling (not useful to package consumers)
+CLAUDE.md
